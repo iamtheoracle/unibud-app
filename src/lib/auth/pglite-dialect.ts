@@ -14,12 +14,8 @@ import {
   type TransactionSettings,
 } from "kysely";
 
-/**
- * Compatibility name retained for the existing Better Auth server import.
- * The implementation is now backed by Neon/Postgres; no PGlite code or WASM
- * assets are loaded into the production bundle.
- */
-export function pgliteDialect(getClient: () => Promise<unknown> | unknown): Dialect {
+/** Compatibility name retained for the existing Better Auth server import. */
+export function pgliteDialect(_getClient: () => Promise<unknown> | unknown): Dialect {
   return {
     createAdapter: () => new PostgresAdapter(),
     createDriver: () => new NeonDriver(),
@@ -47,13 +43,15 @@ class NeonDriver implements Driver {
 
   async releaseConnection(connection: DatabaseConnection): Promise<void> {
     if (connection !== this.connection) throw new Error("Invalid connection");
-    await this.connection!.release();
+    this.connection.release();
     this.connection = undefined;
   }
 
   async beginTransaction(conn: DatabaseConnection, settings: TransactionSettings): Promise<void> {
-    const c = conn as NeonConnection;
-    await c.query(settings.isolationLevel ? `start transaction isolation level ${settings.isolationLevel}` : "begin", []);
+    const sql = settings.isolationLevel
+      ? `start transaction isolation level ${settings.isolationLevel}`
+      : "begin";
+    await (conn as NeonConnection).query(sql, []);
   }
 
   async commitTransaction(conn: DatabaseConnection): Promise<void> {
@@ -74,6 +72,10 @@ class NeonDriver implements Driver {
 class NeonConnection implements DatabaseConnection {
   constructor(private readonly client: import("pg").PoolClient) {}
 
+  async query(text: string, params: unknown[]): Promise<void> {
+    await this.client.query(text, params);
+  }
+
   async executeQuery<O>(compiledQuery: CompiledQuery): Promise<QueryResult<O>> {
     const result = await this.client.query(compiledQuery.sql, [...compiledQuery.parameters]);
     return {
@@ -90,7 +92,7 @@ class NeonConnection implements DatabaseConnection {
     }
   }
 
-  async release(): Promise<void> {
+  release(): void {
     this.client.release();
   }
 }
