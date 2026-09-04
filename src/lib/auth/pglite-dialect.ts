@@ -1,8 +1,4 @@
-/**
- * Kysely dialect for Better Auth over the app's embedded PGLite instance.
- * Lazy: resolves `getClient` on first connection so migrations can finish first.
- */
-import type { PGlite } from "@electric-sql/pglite";
+import { Pool } from "pg";
 import {
   CompiledQuery,
   type DatabaseConnection,
@@ -18,121 +14,85 @@ import {
   type TransactionSettings,
 } from "kysely";
 
-type Client = PGlite;
-
-/** Factory used by `auth/server.ts`: `pgliteDialect(() => getPglite())`. */
-export function pgliteDialect(
-  getClient: () => Promise<Client> | Client,
-): Dialect {
+/** Compatibility name retained for the existing Better Auth server import. */
+export function pgliteDialect(_getClient: () => Promise<unknown> | unknown): Dialect {
   return {
     createAdapter: () => new PostgresAdapter(),
-    createDriver: () => new LazyPGliteDriver(getClient),
+    createDriver: () => new NeonDriver(),
     createQueryCompiler: (): QueryCompiler => new PostgresQueryCompiler(),
-    createIntrospector: (db: Kysely<unknown>): DatabaseIntrospector =>
-      new PostgresIntrospector(db),
+    createIntrospector: (db: Kysely<unknown>): DatabaseIntrospector => new PostgresIntrospector(db),
   };
 }
 
-class LazyPGliteDriver implements Driver {
-  private client: Client | undefined;
-  private connection: PGliteConnection | undefined;
-  private queue: Array<(con: PGliteConnection) => void> = [];
-
-  constructor(private readonly getClient: () => Promise<Client> | Client) {}
+class NeonDriver implements Driver {
+  private pool?: Pool;
+  private connection?: NeonConnection;
 
   async init(): Promise<void> {
-    this.client = await this.getClient();
+    const url = process.env.DATABASE_URL?.trim();
+    if (!url) throw new Error("DATABASE_URL is required for Better Auth.");
+    this.pool = new Pool({ connectionString: url });
   }
 
   async acquireConnection(): Promise<DatabaseConnection> {
-    if (this.client === undefined) {
-      this.client = await this.getClient();
-    }
-    if (this.connection !== undefined) {
-      return new Promise((resolve) => {
-        this.queue.push(resolve);
-      });
-    }
-    this.connection = new PGliteConnection(this.client);
+    if (!this.pool) await this.init();
+    if (this.connection) throw new Error("Concurrent Better Auth connection acquisition is not supported.");
+    this.connection = new NeonConnection(await this.pool!.connect());
     return this.connection;
   }
 
   async releaseConnection(connection: DatabaseConnection): Promise<void> {
-    if (connection !== this.connection) {
-      throw new Error("Invalid connection");
-    }
-    const next = this.queue.shift();
-    if (next === undefined) {
-      this.connection = undefined;
-      return;
-    }
-    next(this.connection);
+    if (connection !== this.connection) throw new Error("Invalid connection");
+    this.connection.release();
+    this.connection = undefined;
   }
 
-  async beginTransaction(
-    conn: DatabaseConnection,
-    settings: TransactionSettings,
-  ): Promise<void> {
-    const c = conn as PGliteConnection;
-    if (settings.isolationLevel) {
-      await c.executeQuery(
-        CompiledQuery.raw(
-          `start transaction isolation level ${settings.isolationLevel}`,
-        ),
-      );
-    } else {
-      await c.executeQuery(CompiledQuery.raw("begin"));
-    }
+  async beginTransaction(conn: DatabaseConnection, settings: TransactionSettings): Promise<void> {
+    const sql = settings.isolationLevel
+      ? `start transaction isolation level ${settings.isolationLevel}`
+      : "begin";
+    await (conn as NeonConnection).query(sql, []);
   }
 
   async commitTransaction(conn: DatabaseConnection): Promise<void> {
-    await (conn as PGliteConnection).executeQuery(CompiledQuery.raw("commit"));
+    await (conn as NeonConnection).query("commit", []);
   }
 
   async rollbackTransaction(conn: DatabaseConnection): Promise<void> {
-    await (conn as PGliteConnection).executeQuery(
-      CompiledQuery.raw("rollback"),
-    );
+    await (conn as NeonConnection).query("rollback", []);
   }
 
   async destroy(): Promise<void> {
-    // Do not close the client: it is the shared getPglite() singleton used by
-    // app SQL (getSql). Only drop our local handle so auth teardown cannot
-    // poison the rest of the process.
-    this.client = undefined;
     this.connection = undefined;
-    this.queue = [];
+    if (this.pool) await this.pool.end();
+    this.pool = undefined;
   }
 }
 
-class PGliteConnection implements DatabaseConnection {
-  constructor(private readonly client: Client) {}
+class NeonConnection implements DatabaseConnection {
+  constructor(private readonly client: import("pg").PoolClient) {}
 
-  async executeQuery<O>(compiledQuery: CompiledQuery): Promise<QueryResult<O>> {
-    const result = await this.client.query(compiledQuery.sql, [
-      ...compiledQuery.parameters,
-    ]);
-    if (result.affectedRows) {
-      return {
-        numAffectedRows: BigInt(result.affectedRows),
-        rows: result.rows as O[],
-      };
-    }
-    return { rows: result.rows as O[] };
+  async query(text: string, params: unknown[]): Promise<void> {
+    await this.client.query(text, params);
   }
 
-  async *streamQuery<O>(
-    compiledQuery: CompiledQuery,
-    chunkSize: number,
-  ): AsyncIterableIterator<QueryResult<O>> {
-    if (!Number.isInteger(chunkSize) || chunkSize <= 0) {
-      throw new Error("chunkSize must be a positive integer");
-    }
-    const result = await this.client.query(compiledQuery.sql, [
-      ...compiledQuery.parameters,
-    ]);
+  async executeQuery<O>(compiledQuery: CompiledQuery): Promise<QueryResult<O>> {
+    const result = await this.client.query(compiledQuery.sql, [...compiledQuery.parameters]);
+    return {
+      numAffectedRows: result.rowCount === null ? undefined : BigInt(result.rowCount),
+      rows: result.rows as O[],
+    };
+  }
+
+  async *streamQuery<O>(compiledQuery: CompiledQuery, chunkSize: number): AsyncIterableIterator<QueryResult<O>> {
+    if (!Number.isInteger(chunkSize) || chunkSize <= 0) throw new Error("chunkSize must be a positive integer");
+    const result = await this.client.query(compiledQuery.sql, [...compiledQuery.parameters]);
     for (let i = 0; i < result.rows.length; i += chunkSize) {
       yield { rows: result.rows.slice(i, i + chunkSize) as O[] };
     }
+  }
+
+  release(): void {
+    this.client.release();
   }
 }
