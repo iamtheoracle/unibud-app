@@ -2,58 +2,35 @@
 
 export type DbSource = "neon";
 
-const databaseUrl =
-  typeof process !== "undefined" ? process.env.DATABASE_URL?.trim() : undefined;
-
+const databaseUrl = typeof process !== "undefined" ? process.env.DATABASE_URL?.trim() : undefined;
 if (!databaseUrl) {
-  throw new Error(
-    "DATABASE_URL is required for UNIBUD server database access. Configure the Neon Postgres connection string in the deployment environment.",
-  );
+  throw new Error("DATABASE_URL is required for UNIBUD server database access. Configure the Neon Postgres connection string in the deployment environment.");
 }
 
 export const dbSource: DbSource = "neon";
 
 export interface Sql {
-  <T = Record<string, unknown>>(
-    strings: TemplateStringsArray,
-    ...values: unknown[]
-  ): Promise<T[]>;
-  query<T = Record<string, unknown>>(
-    text: string,
-    params?: unknown[],
-  ): Promise<T[]>;
+  <T = Record<string, unknown>>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T[]>;
+  query<T = Record<string, unknown>>(text: string, params?: unknown[]): Promise<T[]>;
 }
 
 const OID_INT8 = 20;
 const OID_DATE = 1082;
 const OID_INTERVAL = 1186;
 const identity = (value: string) => value;
-
 type Run = <T>(text: string, params: unknown[]) => Promise<T[]>;
 
 function toSql(run: Run): Sql {
-  const sql = (async <T = Record<string, unknown>>(
-    strings: TemplateStringsArray,
-    ...values: unknown[]
-  ): Promise<T[]> => {
+  const sql = (async <T = Record<string, unknown>>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T[]> => {
     let text = strings[0] ?? "";
-    for (let i = 0; i < values.length; i += 1) {
-      text += `$${i + 1}${strings[i + 1] ?? ""}`;
-    }
+    for (let i = 0; i < values.length; i += 1) text += `$${i + 1}${strings[i + 1] ?? ""}`;
     return run<T>(text, values);
   }) as unknown as Sql;
-
-  sql.query = <T = Record<string, unknown>>(
-    text: string,
-    params: unknown[] = [],
-  ) => run<T>(text, params);
-
+  sql.query = <T = Record<string, unknown>>(text: string, params: unknown[] = []) => run<T>(text, params);
   return sql;
 }
 
-const globalRef = globalThis as typeof globalThis & {
-  __pgSqlPromise__?: Promise<Sql>;
-};
+const globalRef = globalThis as typeof globalThis & { __pgSqlPromise__?: Promise<Sql> };
 
 function createNeonSql(): Promise<Sql> {
   globalRef.__pgSqlPromise__ ??= (async () => {
@@ -61,17 +38,12 @@ function createNeonSql(): Promise<Sql> {
     types.setTypeParser(OID_INT8, Number);
     types.setTypeParser(OID_DATE, identity);
     types.setTypeParser(OID_INTERVAL, identity);
-
     const pool = new Pool({ connectionString: databaseUrl });
-    return toSql(async <T>(text: string, params: unknown[]) => {
-      const result = await pool.query(text, params);
-      return result.rows as T[];
-    });
+    return toSql(async <T>(text: string, params: unknown[]) => (await pool.query(text, params)).rows as T[]);
   })().catch((error) => {
     globalRef.__pgSqlPromise__ = undefined;
     throw error;
   });
-
   return globalRef.__pgSqlPromise__;
 }
 
@@ -79,7 +51,11 @@ export function getSql(): Promise<Sql> {
   return createNeonSql();
 }
 
-/** Neon uses a connection pool and does not require application bootstrap. */
 export function ensureDbReady(): Promise<void> {
   return Promise.resolve();
+}
+
+/** Compatibility export for the existing auth module. PGlite is intentionally unavailable. */
+export async function getPglite(): Promise<never> {
+  throw new Error("PGlite is disabled in UNIBUD production; use Neon via DATABASE_URL.");
 }
