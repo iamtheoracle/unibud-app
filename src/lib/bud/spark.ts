@@ -22,7 +22,9 @@ export function routeSpecialists(prompt: string): SpecialistId[] {
   if (/\b(reel|clip|create|shoot|edit|post this)\b/.test(p)) extra.push("creator");
   if (/\b(diagram|visual|picture this|draw|show me how it looks)\b/.test(p)) extra.push("vision");
   if (/\b(remember|last time|we were|progress|where did we)\b/.test(p)) extra.push("atlas");
-  if (/\b(trending|what.?s happening|gist right now|discover)\b/.test(p)) extra.push("pulse");
+  if (/\b(trending|what.?s happening|gist right now|discover|browse|scroll|show me something new|what.?s new)\b/.test(p)) extra.push("pulse", "browser");
+  if (/\b(web|search online|look up|find online|source|article|news)\b/.test(p)) extra.push("browser");
+  if (/\b(my (instagram|tiktok|youtube)|my posts|my videos|my social|import my|bring my)\b/.test(p)) extra.push("browser");
   if (/\b(podcast|listen|audio|voice note|read (it|this) (out|aloud))\b/.test(p)) extra.push("voice");
   if (/\b(where in unibud|how do i find|take me to|which tab|open |go to |show my )\b/.test(p)) extra.push("navigator");
   const seen = new Set<SpecialistId>();
@@ -36,6 +38,7 @@ export function sparkSystemNotes(prompt: string): string[] {
   if (specialists.includes("community")) notes.push("Use real Campus, Connect, Chat, or other existing surfaces. Never invent a group or event.");
   if (specialists.includes("navigator")) notes.push("Navigate to real UNIBUD surfaces only. Bud does not duplicate those surfaces internally.");
   if (specialists.includes("pulse")) notes.push("Use current verified activity only. No fabricated trends, events, or campus activity.");
+  if (specialists.includes("browser")) notes.push("Use real connected browsing/discovery sources only. Never fabricate external posts, videos, trends, sources, or imports.");
   if (specialists.includes("atlas")) notes.push("Use retrieved continuity when available. Never invent memory.");
   return notes;
 }
