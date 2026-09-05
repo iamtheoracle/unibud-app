@@ -24,7 +24,8 @@ const definitions: AgentDefinition[] = [
   { id: "voice", role: "voice specialist", responsibility: "Handle real speech recognition and synthesis when voice providers are connected.", contextScope: ["audio", "voice"], memoryScope: ["voice-preferences"], permissions: ["voice"], collaborators: ["spark", "creator"] },
   { id: "navigator", role: "UNIBUD navigator", responsibility: "Navigate students to real UNIBUD surfaces without duplicating them inside Bud.", contextScope: ["navigation", "routes"], memoryScope: ["navigation-preferences"], permissions: ["navigate"], collaborators: ["spark", "bud"] },
   { id: "browser", role: "browsing and discovery specialist", responsibility: "Retrieve real, permitted external or connected content for the world when a browsing provider exists; never simulate discovery.", contextScope: ["web", "social", "discovery", "integrations"], memoryScope: ["source-history", "connected-sources"], permissions: ["browse", "discover"], collaborators: ["spark", "oracle", "community", "pulse"], handler: async (input, context) => {
-    const source = input.context?.source === "web" || input.context?.source === "campus" || input.context?.source === "creator" ? input.context.source : "social";
+    const requestedSource = input.context?.source;
+    const source = requestedSource === "web" || requestedSource === "campus" || requestedSource === "creator" ? requestedSource : "social";
     const result = await browserProvider.discover({
       requestId: context.requestId,
       source,
