@@ -1,0 +1,12 @@
+{
+  "previewPort": 3000,
+  "healthPath": "/",
+  "startCommand": "docker compose -f docker-compose.base44.yml up -d",
+  "secrets": [
+    {
+      "name": "XAI_API_KEY",
+      "description": "xAI (Grok) API key for the Bud AI assistant. Optional — without it, Bud falls back to a free canned reply. Obtain from https://console.x.ai",
+      "requiredAtBoot": false
+    }
+  ]
+}
