@@ -16,6 +16,7 @@ import { canGovernClass } from "@/lib/unibud/roles";
 import { useCampusStore } from "@/lib/unibud/campus-store";
 import { useStudioStore } from "@/lib/studio/store";
 import { VideoCall } from "@/components/chat/video-call";
+import { ChatBudPresence } from "@/components/chat/bud-presence";
 import { ShareCard } from "@/components/chat/share-card";
 import { BUD_MEDIA } from "@/lib/media/bud-media";
 import { recordAudioEvent } from "@/lib/music/events";
@@ -77,6 +78,7 @@ function DirectThread({ id }: { id: string }) {
         </div>
         <CallButtons group={false} peer={person?.name ?? "them"} />
       </div>
+      <ChatBudPresence />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-5">
         <p className="text-center text-xs text-muted-foreground">Today</p>
         {(q.data?.messages ?? []).map((m) => (
@@ -221,6 +223,7 @@ function RoomThread({ room }: { room: CampusRoom }) {
           }
         />
       </div>
+      <ChatBudPresence />
       <div className="flex-1 space-y-3 overflow-y-auto px-4 py-5">
         {(ROOM_SEED[room.id] ?? []).map((m, i) => (
           <div
@@ -510,4 +513,3 @@ function Composer({
     </div>
   );
 }
-
