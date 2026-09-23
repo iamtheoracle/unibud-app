@@ -13,6 +13,7 @@ import {
   type QueryResult,
   type TransactionSettings,
 } from "kysely";
+import { DATABASE_URL_VARS, resolveDatabaseUrl } from "../database-url";
 
 /** Compatibility name retained for the existing Better Auth server import. */
 export function pgliteDialect(_getClient: () => Promise<unknown> | unknown): Dialect {
@@ -29,8 +30,8 @@ class NeonDriver implements Driver {
   private connection?: NeonConnection;
 
   async init(): Promise<void> {
-    const url = process.env.DATABASE_URL?.trim();
-    if (!url) throw new Error("DATABASE_URL is required for Better Auth.");
+    const url = resolveDatabaseUrl();
+    if (!url) throw new Error(`A Postgres connection string (${DATABASE_URL_VARS}) is required for Better Auth.`);
     this.pool = new Pool({ connectionString: url });
   }
 

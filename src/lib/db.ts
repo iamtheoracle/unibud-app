@@ -1,10 +1,11 @@
 /** Server-only Postgres access for UNIBUD. Production uses Neon. */
+import { DATABASE_URL_VARS, resolveDatabaseUrl } from "./database-url";
 
 export type DbSource = "neon";
 
-const databaseUrl = typeof process !== "undefined" ? process.env.DATABASE_URL?.trim() : undefined;
+const databaseUrl = resolveDatabaseUrl();
 if (!databaseUrl) {
-  throw new Error("DATABASE_URL is required for UNIBUD server database access. Configure the Neon Postgres connection string in the deployment environment.");
+  throw new Error(`A Postgres connection string (${DATABASE_URL_VARS}) is required for UNIBUD server database access. Configure it in the deployment environment.`);
 }
 
 export const dbSource: DbSource = "neon";
