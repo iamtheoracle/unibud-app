@@ -13,8 +13,6 @@ import {
   Search,
   Settings,
   Sparkles,
-  Store,
-  Wallet,
   Wrench,
 } from "lucide-react";
 import { Wordmark } from "@/components/brand/logo";
@@ -32,8 +30,6 @@ const items = [
   { to: "/bud", label: "Bud", icon: Sparkles },
   { to: "/riff", label: "Riff", icon: Megaphone },
   { to: "/search", label: "Search", icon: Search },
-  { to: "/money", label: "Wallet", icon: Wallet },
-  { to: "/market", label: "Marketplace", icon: Store },
   { to: "/board", label: "Board", icon: Clapperboard },
   { to: "/studies", label: "Studies", icon: BookOpen },
   { to: "/news", label: "Educational News", icon: Newspaper },
