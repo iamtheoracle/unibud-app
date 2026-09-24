@@ -14,12 +14,9 @@
  * Tri-mode:
  *   - Deployed: the deployer injects a per-app `GROK_AUTH_*` + `BETTER_AUTH_URL`
  *     + `DATABASE_URL`, so real federated auth is persisted in Postgres.
- *   - Sandbox live preview: no injection -> falls back to the shared **preview
- *     client** (`./preview`) and derives the preview's `https://*.grok-sandbox.com`
- *     origin from the request, so real sign-in works (no demo users). Sessions
- *     and identities persist in the embedded PGLite DB (same DB as app data);
- *     the process restart wipes both. Live-preview iframe clients use a bearer
- *     token (partitioned cookies) — see `client.ts`.
+ *   - Sandbox/live-preview without deployment database: auth is stateless/off
+ *     until a real PostgreSQL database is configured. The production path never
+ *     falls back to an embedded database.
  *   - Off (`VITE_AUTH_ENABLED=false`, the shipped default): no providers;
  *     `requireUserId` resolves a dev user with no database configured, and
  *     throws fail-closed once `DATABASE_URL` is set (see `verify.server.ts`).
@@ -35,11 +32,9 @@ import { tanstackStartCookies } from "better-auth/tanstack-start";
 import { getCookie } from "@tanstack/react-start/server";
 import { randomBytes } from "node:crypto";
 import { Pool } from "pg";
-import { ensureDbReady, getPglite } from "../db";
 import { emailAndPasswordEnabled } from "./email-password";
 import { GATE_PROVIDER_ID, gateIdentitySessions } from "./gate-session.server";
 import { GROK_PROVIDERS } from "./providers";
-import { pgliteDialect } from "./pglite-dialect";
 import { databaseConfigured, resolveDatabaseUrl } from "../database-url";
 import {
   GROK_ISSUER_DEFAULT,
@@ -47,9 +42,6 @@ import {
   PREVIEW_CLIENT_ID,
   PREVIEW_CLIENT_SECRET,
 } from "./preview";
-
-// Kick (and share) PGLite bootstrap as soon as the auth server module loads.
-void ensureDbReady();
 
 /**
  * Preview secret must outlive module reloads: PGLite (and its session rows) is
@@ -174,6 +166,7 @@ const grokOAuthPlugin = authConfigured
   : null;
 
 export const auth = betterAuth({
+  ...databaseOptions,
   baseURL,
   // Deployed apps inject BETTER_AUTH_SECRET. Preview: process-stable secret on
   // globalThis so HMR doesn't invalidate PGLite-backed sessions (see above).
