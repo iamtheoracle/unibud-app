@@ -9,7 +9,7 @@ test("production runtime has no PGlite server dependency", async () => {
   const db = await readFile("src/lib/db.ts", "utf8");
   assert.equal(pkg.dependencies?.["@electric-sql/pglite"], undefined);
   assert.equal(pkg.devDependencies?.["@electric-sql/pglite"], undefined);
-  assert.doesNotMatch(lock, /node_modules\\/@electric-sql\\/pglite/);
-  assert.doesNotMatch(auth, /@electric-sql\\/pglite|pgliteDialect|getPglite/);
-  assert.doesNotMatch(db, /@electric-sql\\/pglite|PGlite/);
+  assert.doesNotMatch(lock, /node_modules\/@electric-sql\/pglite/);
+  assert.doesNotMatch(auth, /@electric-sql\/pglite|pgliteDialect|getPglite/);
+  assert.doesNotMatch(db, /@electric-sql\/pglite|PGlite/);
 });
