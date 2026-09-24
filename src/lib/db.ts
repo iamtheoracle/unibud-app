@@ -1,11 +1,11 @@
-/** Server-only Postgres access for UNIBUD. Production uses Neon. */
+/** Server-only PostgreSQL access for UNIBUD. */
 import { DATABASE_URL_VARS, resolveDatabaseUrl } from "./database-url";
 
-export type DbSource = "neon";
+export type DbSource = "postgres";
 
 const databaseUrl = resolveDatabaseUrl();
 
-export const dbSource: DbSource = "neon";
+export const dbSource: DbSource = "postgres";
 
 export interface Sql {
   <T = Record<string, unknown>>(strings: TemplateStringsArray, ...values: unknown[]): Promise<T[]>;
@@ -30,7 +30,7 @@ function toSql(run: Run): Sql {
 
 const globalRef = globalThis as typeof globalThis & { __pgSqlPromise__?: Promise<Sql> };
 
-function createNeonSql(): Promise<Sql> {
+function createPostgresSql(): Promise<Sql> {
   globalRef.__pgSqlPromise__ ??= (async () => {
     const { Pool, types } = await import("pg");
     types.setTypeParser(OID_INT8, Number);
@@ -38,7 +38,7 @@ function createNeonSql(): Promise<Sql> {
     types.setTypeParser(OID_INTERVAL, identity);
     if (!databaseUrl) {
       throw new Error(
-        `A Postgres connection string (${DATABASE_URL_VARS}) is required for UNIBUD database operations. Configure it in the deployment environment.`,
+        `A PostgreSQL connection string (${DATABASE_URL_VARS}) is required for UNIBUD database operations. Configure it in the deployment environment.`,
       );
     }
     const pool = new Pool({ connectionString: databaseUrl });
@@ -51,7 +51,7 @@ function createNeonSql(): Promise<Sql> {
 }
 
 export function getSql(): Promise<Sql> {
-  return createNeonSql();
+  return createPostgresSql();
 }
 
 export function ensureDbReady(): Promise<void> {
@@ -60,5 +60,5 @@ export function ensureDbReady(): Promise<void> {
 
 /** Compatibility export for the existing auth module. PGlite is intentionally unavailable. */
 export async function getPglite(): Promise<never> {
-  throw new Error("PGlite is disabled in UNIBUD production; use Neon via DATABASE_URL.");
+  throw new Error("PGlite is disabled in UNIBUD production; use PostgreSQL via DATABASE_URL.");
 }
