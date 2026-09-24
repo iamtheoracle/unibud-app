@@ -171,7 +171,8 @@ async function runAsk(
   try { await sql`update bud_conversations set milestone_json = ${JSON.stringify(milestone)} where id = ${conversationId} and user_id = ${userId}`; } catch { /* optional migration */ }
 
   const brief = buildBudBrief({ prompt, milestone, atlas: extra?.atlas, fromPath: extra?.fromPath });
-  const oracle = await queryOracleLayer({ query: prompt, studentId: userId });
+  const needsVerification = /\b(true|real|happen|news|discover|invent|moon|space|robot|trend|trending|current|latest|today|source|article|online|search)\b/i.test(prompt);
+  const oracle = needsVerification ? await queryOracleLayer({ query: prompt, studentId: userId }) : null;
   const oracleLine = oracle ? `Verified internal context: ${oracle.summary}` : null;
   const sparkNotes = sparkSystemNotes(prompt).join("\n");
   const communication = communicationInstruction(prompt);
