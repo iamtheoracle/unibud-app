@@ -18,14 +18,12 @@ export type AIProvider = {
   complete: (messages: ProviderMessage[], opts?: { maxTokens?: number; signal?: AbortSignal }) => Promise<ProviderResult>;
 };
 
-const FREE_REPLY = "I’m here, but the live model isn’t connected right now. The rest of UNIBUD is still here. Try again when the model connection is available.";
-
-const freeProvider: AIProvider = {
-  id: "free",
+const unavailableProvider: AIProvider = {
+  id: "unavailable",
   kind: "free",
   capabilities: [],
   async complete() {
-    return { ok: true, text: FREE_REPLY, providerId: "free" };
+    return { ok: false, error: "Bud’s live model is not configured yet. Connect the approved server-side AI provider before using Bud.", providerId: "unavailable" };
   },
 };
 
@@ -61,5 +59,5 @@ function xaiProvider(apiKey: string): AIProvider {
 export function getAIProvider(): AIProvider {
   const key = typeof process !== "undefined" ? process.env.XAI_API_KEY : undefined;
   if (key && key.trim()) return xaiProvider(key.trim());
-  return freeProvider;
+  return unavailableProvider;
 }
