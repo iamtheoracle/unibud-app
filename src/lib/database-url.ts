@@ -1,10 +1,11 @@
 /**
- * Single place that resolves the server-side Postgres connection string.
+ * Single place that resolves the server-side PostgreSQL connection string.
  *
- * `DATABASE_URL` stays the primary contract (a self-managed Neon/Postgres
- * instance). Netlify's managed Postgres injects its own variables instead, so
- * those are accepted as a fallback — that way the deployed app works whether
- * the connection string is set by hand or provisioned by the platform.
+ * `DATABASE_URL` is the canonical application contract. Netlify's managed
+ * PostgreSQL integration injects its own variables instead, so those are
+ * accepted as fallbacks. This keeps the application database layer provider-
+ * neutral while supporting both manually configured and platform-provisioned
+ * PostgreSQL connections.
  *
  * Server-only: the browser bundle must never import this.
  */
@@ -25,7 +26,7 @@ export function resolveDatabaseUrl(): string | undefined {
   return undefined;
 }
 
-/** True when any Postgres connection string is configured. */
+/** True when any PostgreSQL connection string is configured. */
 export function databaseConfigured(): boolean {
   return Boolean(resolveDatabaseUrl());
 }
