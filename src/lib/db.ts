@@ -4,9 +4,6 @@ import { DATABASE_URL_VARS, resolveDatabaseUrl } from "./database-url";
 export type DbSource = "neon";
 
 const databaseUrl = resolveDatabaseUrl();
-if (!databaseUrl) {
-  throw new Error(`A Postgres connection string (${DATABASE_URL_VARS}) is required for UNIBUD server database access. Configure it in the deployment environment.`);
-}
 
 export const dbSource: DbSource = "neon";
 
@@ -39,6 +36,11 @@ function createNeonSql(): Promise<Sql> {
     types.setTypeParser(OID_INT8, Number);
     types.setTypeParser(OID_DATE, identity);
     types.setTypeParser(OID_INTERVAL, identity);
+    if (!databaseUrl) {
+      throw new Error(
+        `A Postgres connection string (${DATABASE_URL_VARS}) is required for UNIBUD database operations. Configure it in the deployment environment.`,
+      );
+    }
     const pool = new Pool({ connectionString: databaseUrl });
     return toSql(async <T>(text: string, params: unknown[]) => (await pool.query(text, params)).rows as T[]);
   })().catch((error) => {
