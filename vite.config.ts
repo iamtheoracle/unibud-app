@@ -75,7 +75,7 @@ export default defineConfig({
     grokPwaPlugin(),
     tailwindcss(),
     tanstackStart(),
-    nitro({ serverDir: "./server" }),
+    nitro({ preset: "netlify", serverDir: "./server" }),
     viteReact(),
   ],
 });
