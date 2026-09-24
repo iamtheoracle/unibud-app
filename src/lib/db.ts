@@ -58,7 +58,3 @@ export function ensureDbReady(): Promise<void> {
   return Promise.resolve();
 }
 
-/** Compatibility export for the existing auth module. PGlite is intentionally unavailable. */
-export async function getPglite(): Promise<never> {
-  throw new Error("PGlite is disabled in UNIBUD production; use PostgreSQL via DATABASE_URL.");
-}
