@@ -2,13 +2,13 @@
 
 UNIBUD is a student social + academic platform. Square is the social home. Bud is the visible AI. Board, Studies, Chat, Communities, and Connect sit around that.
 
-This repository is the TanStack Start implementation (auth, Square, Bud, Studio, Board, Studies). It is not the older Base44 app in `iamtheoracle/unibud`.
+This repository is the standalone UNIBUD application (auth, Square, Bud, Studio, Board, Studies). It is not the older Base44 app in `iamtheoracle/unibud`. UNIBUD has its own public product identity; it is not presented as Oracle Arc.
 
 ## Stack
 
 - TanStack Start + React
 - Better Auth
-- PGLite / Postgres
+- Postgres in production; local development uses the repository's local database path
 - Zustand campus store
 
 ## Run
@@ -34,6 +34,7 @@ Dev server: `http://localhost:8080`
 ## Product notes
 
 - **Bud** is the only visible AI. Spark and specialists stay internal.
+- External providers are optional capability boundaries; the core application must not silently depend on them.
 - Syllabus belongs to the **course**. Bud uses enrolled courses as context.
 - Board is the classroom layer. It is not Bud.
 - Music for Drops / Stories / Peek is licensed-catalogue architecture, not user uploads of commercial tracks.
