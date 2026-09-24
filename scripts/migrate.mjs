@@ -20,11 +20,12 @@ import { pendingMigrations } from "./migration-plan.mjs";
 
 const databaseUrl =
   process.env.DATABASE_URL?.trim() ||
+  process.env.NETLIFY_DB_URL?.trim() ||
   process.env.NETLIFY_DATABASE_URL?.trim() ||
   process.env.NETLIFY_DATABASE_URL_UNPOOLED?.trim();
 if (!databaseUrl) {
   console.log(
-    "[migrate] DATABASE_URL not set — skipping (the PGLite fallback migrates itself).",
+    "[migrate] no Postgres connection variable set — skipping migrations.",
   );
   process.exit(0);
 }
