@@ -1,4 +1,4 @@
- # UNIBUD deployment environment
+# UNIBUD deployment environment
 
 UNIBUD is a TanStack Start + Nitro application. The repository keeps secrets out of source control.
 
