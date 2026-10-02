@@ -297,6 +297,19 @@ export const createListing = createServerFn({ method: "POST" })
     return mapListing(rows[0]);
   });
 
+export const createUserReport = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { kind: string; body: string }) => input)
+  .handler(async ({ context, data }) => {
+    const body = data.body.trim();
+    if (!body) throw new Error("Report details are required.");
+    const kind = data.kind.trim() || "problem";
+    const sql = await getSql();
+    const id = `report_${crypto.randomUUID()}`;
+    await sql`insert into user_reports (id,user_id,kind,body) values (${id},${context.userId},${kind},${body})`;
+    return { id };
+  });
+
 export const listNotes = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
