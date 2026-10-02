@@ -120,6 +120,12 @@ const trustedOrigins: string[] = explicitBaseURL
 
 const databaseUrl = resolveDatabaseUrl();
 
+if (process.env.NODE_ENV === "production" && !databaseUrl) {
+  throw new Error(
+    "UNIBUD production requires DATABASE_URL; refusing to fall back to embedded PGLite.",
+  );
+}
+
 // Static broker OAuth endpoints (skip OIDC discovery on every sign-in / callback).
 // Discovery would cost an extra network hop to the broker before the popup can
 // even redirect to Google/X — the live-preview popup felt stuck on the app for
