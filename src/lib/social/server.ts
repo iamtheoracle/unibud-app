@@ -11,8 +11,8 @@ async function loadConversation(userId: string, id: string) {
   if (!convos[0]) return null;
   const messages = (
     await sql`select * from messages where conversation_id = ${id} and user_id = ${userId} order by created_at asc`
-  ).map(mapMessage);
-  return { conversation: mapConvo(convos[0]), messages };
+  ).map((r) => mapMessage(r as Parameters<typeof mapMessage>[0]));
+  return { conversation: mapConvo(convos[0] as Parameters<typeof mapConvo>[0]), messages };
 }
 
 export const listConversations = createServerFn({ method: "GET" })
@@ -20,7 +20,7 @@ export const listConversations = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sql = await getSql();
     const rows = await sql`select * from conversations where user_id = ${context.userId} order by updated_at desc`;
-    return rows.map(mapConvo);
+    return rows.map((r) => mapConvo(r as Parameters<typeof mapConvo>[0]));
   });
 
 export const getConversation = createServerFn({ method: "GET" })
@@ -35,7 +35,7 @@ export const openConversation = createServerFn({ method: "POST" })
     const handle = data.handle.replace(/^@/, "").trim().toLowerCase();
     const sql = await getSql();
     const existing = await sql`select * from conversations where user_id = ${context.userId} and peer_handle = ${handle} limit 1`;
-    if (existing[0]) return mapConvo(existing[0]);
+    if (existing[0]) return mapConvo(existing[0] as Parameters<typeof mapConvo>[0]);
     const id = crypto.randomUUID();
     const seed = data.seed || `Hi — I saw your listing on UNIBUD.`;
     await sql`insert into conversations (id, user_id, peer_handle, listing_id, last_body)
@@ -51,7 +51,7 @@ export const openConversation = createServerFn({ method: "POST" })
     await sql`update conversations set last_body = ${reply}, updated_at = now() where id = ${id} and user_id = ${context.userId}`;
     await notify(context.userId, "message", `Chat with @${handle}`, reply, `/messages/${id}`);
     const rows = await sql`select * from conversations where id = ${id} and user_id = ${context.userId}`;
-    return mapConvo(rows[0]);
+    return mapConvo(rows[0] as Parameters<typeof mapConvo>[0]);
   });
 
 export const sendMessage = createServerFn({ method: "POST" })
