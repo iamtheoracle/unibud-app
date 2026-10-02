@@ -3,14 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { EmptyState } from "@/components/unibud/empty";
 import { SignInCard, useAuthReady } from "@/components/unibud/sign-in-gate";
 import { listSaves } from "@/lib/unibud/server";
-import { useCampusStore } from "@/lib/unibud/campus-store";
 
 export const Route = createFileRoute("/_app/saved")({ component: Saved });
 
 function Saved() {
   const { user, isPending } = useAuthReady();
-  const savedAudioIds = useCampusStore((s) => s.savedAudioIds ?? []);
-  const originals = useCampusStore((s) => s.originalAudios ?? []);
   const q = useQuery({
     queryKey: ["saves"],
     queryFn: () => listSaves(),
@@ -31,7 +28,7 @@ function Saved() {
     <main className="px-4 pb-8 md:px-6">
       <h1 className="pt-2 text-2xl font-medium tracking-tight">Saved</h1>
       <p className="mt-1 text-sm text-muted-foreground">Videos and posts you kept. Saved audio is separate.</p>
-      {false && savedAudioIds.length ? (
+      {false ? (
         <div className="mt-5">
           <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">Saved audio</p>
           <ul className="mt-2 space-y-2">
