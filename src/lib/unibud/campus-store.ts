@@ -471,13 +471,31 @@ export const useCampusStore = create<CampusState>()(
           },
         })),
     }),
-    { name: "unibud-campus", merge: (persisted, current) => ({
-      ...current,
-      ...(persisted as object),
-      composeOpen: false,
-      dropOpen: false,
-      squareView: "feed" as const,
-    }) },
+    {
+      name: "unibud-campus",
+      version: 2,
+      migrate: (persisted) => ({
+        ...(persisted as object),
+        likeCounts: {},
+        following: [],
+        followers: [],
+        connections: [],
+        incoming: [],
+        outgoing: [],
+        recentSearches: [],
+        notes: [],
+        spills: [],
+        originalAudios: [],
+        homeCampusId: "",
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as object),
+        composeOpen: false,
+        dropOpen: false,
+        squareView: "feed" as const,
+      }),
+    },
   ),
 );
 
