@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
-import { ensureCatalogSeed } from "./seed";
 import {
   mapCommunity,
   mapDiscovery,
