@@ -1,5 +1,5 @@
 import type { AgentDefinition, AgentId } from "./contracts";
-import type { BrowsingProvider } from "@/lib/world/browsing";
+import { emptyBrowsingResult, type BrowsingProvider } from "@/lib/world/browsing";
 
 const browserProvider: BrowsingProvider = {
   async discover(request) {
