@@ -49,7 +49,7 @@ export function PublishDesk() {
   const messageId = useStudioStore((s) => s.messageId);
   const addPost = useCampusStore((s) => s.addPost);
   const registerOriginalAudio = useCampusStore((s) => s.registerOriginalAudio);
-  const useOriginalAudioAction = useCampusStore((s) => s.useOriginalAudio);
+  const attachOriginalAudio = useCampusStore((s) => s.useOriginalAudio);
   const addStory = useCampusStore((s) => s.addStory);
   const setComposeOpen = useCampusStore((s) => s.setComposeOpen);
   const { user } = useCurrentUserState();
@@ -143,7 +143,7 @@ export function PublishDesk() {
       });
       addPost(r.body, r.handle, { image: baked, video: clip, id: r.id, audioId: musicRef?.audioId });
       if (musicRef?.sourceType === "ORIGINAL_AUDIO" && musicRef.audioId) {
-        useOriginalAudioAction(musicRef.audioId, r.id);
+        attachOriginalAudio(musicRef.audioId, r.id);
       } else if (mix.some((m) => m.kind === "voice" || m.kind === "file" || m.kind === "tone")) {
         const bed = mix.find((m) => m.kind === "voice" || m.kind === "file" || m.kind === "tone");
         registerOriginalAudio(
