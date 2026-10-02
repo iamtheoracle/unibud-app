@@ -208,7 +208,7 @@ export const upsertMyProfile = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const sql = await getSql();
     const existing = await sql`select * from student_profiles where user_id = ${context.userId} limit 1`;
-    const existingProfile = existing[0] ? mapProfile(existing[0]) : null;
+    const existingProfile = existing[0] ? mapProfile(existing[0] as Parameters<typeof mapProfile>[0]) : null;
     const displayName =
       (data.displayName ?? existingProfile?.displayName ?? "Student").trim() || "Student";
     const handle =
@@ -231,7 +231,7 @@ export const upsertMyProfile = createServerFn({ method: "POST" })
         values (${context.userId}, ${displayName}, ${handle}, ${universityId}, ${program}, ${year}, ${bio}, ${campusRole}, ${onboardingDone})`;
     }
     const rows = await sql`select * from student_profiles where user_id = ${context.userId} limit 1`;
-    return mapProfile(rows[0]);
+    return mapProfile(rows[0] as Parameters<typeof mapProfile>[0]);
   });
 
 export const toggleSave = createServerFn({ method: "POST" })
@@ -303,7 +303,7 @@ export const createListing = createServerFn({ method: "POST" })
       ${data.location.trim() || "Campus"}, ${"[]"}
     )`;
     const rows = await sql`select * from listings where id = ${id} limit 1`;
-    return mapListing(rows[0]);
+    return mapListing(rows[0] as Parameters<typeof mapListing>[0]);
   });
 
 export const createUserReport = createServerFn({ method: "POST" })
@@ -324,7 +324,7 @@ export const listNotes = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sql = await getSql();
     const rows = await sql`select * from notifications where user_id = ${context.userId} order by created_at desc limit 40`;
-    return rows.map(mapNote);
+    return rows.map((r) => mapNote(r as Parameters<typeof mapNote>[0]));
   });
 
 /** Server gate for Tutor Mode. Class Governor does not pass. */
