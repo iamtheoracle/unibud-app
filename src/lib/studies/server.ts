@@ -6,12 +6,8 @@ import { SAMPLE_COURSES } from "@/lib/unibud/catalog";
 
 async function loadStudies(userId: string) {
   const sql = await getSql();
-  const courses = (await sql`select * from courses where user_id = ${userId} order by code`).map(
-    mapCourse,
-  );
-  const materials = (await sql`select * from study_materials where user_id = ${userId}`).map(
-    mapMaterial,
-  );
+  const courses = (await sql`select * from courses where user_id = ${userId} order by code`).map((r) => mapCourse(r as Parameters<typeof mapCourse>[0]));
+  const materials = (await sql`select * from study_materials where user_id = ${userId}`).map((r) => mapMaterial(r as Parameters<typeof mapMaterial>[0]));
   const sessions = (
     await sql`select * from study_sessions where user_id = ${userId} order by starts_at`
   ).map((r) => mapSession(r as Parameters<typeof mapSession>[0]));
