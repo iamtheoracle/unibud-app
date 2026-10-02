@@ -4,7 +4,7 @@ import type { BrowsingProvider } from "@/lib/world/browsing";
 const browserProvider: BrowsingProvider = {
   async discover(request) {
     void request;
-    return emptyBrowsingResult("social");
+    return { ok: false, error: "Browsing provider is not connected." };
   },
 };
 
