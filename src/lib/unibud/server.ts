@@ -79,7 +79,6 @@ export const searchCampus = createServerFn({ method: "GET" })
 export const listByCategory = createServerFn({ method: "GET" })
   .validator((category: ListingCategory | "all") => category)
   .handler(async ({ data: category }) => {
-    await ensureCatalogSeed();
     const sql = await getSql();
     const rows =
       category === "all"
