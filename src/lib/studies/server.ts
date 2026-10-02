@@ -14,7 +14,7 @@ async function loadStudies(userId: string) {
   );
   const sessions = (
     await sql`select * from study_sessions where user_id = ${userId} order by starts_at`
-  ).map(mapSession);
+  ).map((r) => mapSession(r as Parameters<typeof mapSession>[0]));
   return { courses, materials, sessions };
 }
 
