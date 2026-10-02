@@ -32,8 +32,8 @@ function UniBoard() {
   const session = course ? BOARD_SESSIONS.find((s) => s.id === course.boardSessionId || s.course === course.code) : undefined;
   const present = session ? liveAttendance[session.id] === "present" : false;
   const inRoom = session ? livePresence[session.id] === "in" : false;
-  const pods = EDU_PODCASTS.filter((p) => p.course === course.code);
-  const budMedia = BUD_MEDIA.filter((m) => m.title.includes(course.code));
+  const pods = EDU_PODCASTS.filter((p) => p.course === course?.code);
+  const budMedia = BUD_MEDIA.filter((m) => course?.code ? m.title.includes(course.code) : false);
 
   const anns = useQuery({
     queryKey: ["anns", course?.code ?? id],
@@ -63,7 +63,7 @@ function UniBoard() {
     onSuccess: (d) => {
       setAnnTitle("");
       setAnnBody("");
-      qc.setQueryData(["anns", course.code], d);
+      qc.setQueryData(["anns", course?.code ?? id], d);
     },
   });
 
