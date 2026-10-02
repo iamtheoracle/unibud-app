@@ -28,20 +28,6 @@ function Saved() {
     <main className="px-4 pb-8 md:px-6">
       <h1 className="pt-2 text-2xl font-medium tracking-tight">Saved</h1>
       <p className="mt-1 text-sm text-muted-foreground">Videos and posts you kept. Saved audio is separate.</p>
-      {false ? (
-        <div className="mt-5">
-          <p className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">Saved audio</p>
-          <ul className="mt-2 space-y-2">
-            {originals.filter((a) => savedAudioIds.includes(a.audioId)).map((a) => (
-              <li key={a.audioId}>
-                <Link to="/audio/$id" params={{ id: a.audioId }} className="text-sm font-medium">
-                  Original audio · @{a.creatorHandle} — {a.title}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
       <div className="mt-5 space-y-2">
         {(q.data ?? []).map((s) => (
           <Link
