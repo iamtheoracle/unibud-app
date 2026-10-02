@@ -165,7 +165,6 @@ const grokOAuthPlugin = genericOAuth({
         // and can pick (or switch) which account to sign in with.
         authorizationUrlParams: { idp, prompt: "login" },
       })),
-    }
 });
 
 export const auth = betterAuth({
