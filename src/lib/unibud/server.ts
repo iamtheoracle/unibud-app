@@ -15,21 +15,27 @@ import {
 import type { ListingCategory, ListingKind, StudentProfile } from "./types";
 import { canTeach, type CampusRole } from "./roles";
 
+type P2POrderRow = { id: string; buyer_user_id: string; seller_user_id: string | null; listing_id: string; status: string; amount_kobo: number; note: string; created_at: string; updated_at: string };
+type TrackingRow = { id: string; user_id: string; kind: string; title: string; status: string; target_id: string | null; metadata: string; created_at: string; updated_at: string };
+type GoalRow = { id: string; user_id: string; scope: string; title: string; target_value: number | null; current_value: number; status: string; due_at: string | null; created_at: string; updated_at: string };
+type HistoryRow = { id: string; user_id: string; event_type: string; action: string; entity_id: string | null; metadata: string; created_at: string };
+type CampaignRow = { id: string; owner_user_id: string; name: string; objective: string; status: string; created_at: string; updated_at: string };
+
 export const getCampusCatalog = createServerFn({ method: "GET" }).handler(
   async () => {
     const sql = await getSql();
-    const universities = (await sql`select * from universities order by name`).map(mapUni);
-    const people = (await sql`select * from directory_people order by name`).map(mapPerson);
+    const universities = (await sql`select * from universities order by name`) .map((r) => mapUni(r as Parameters<typeof mapUni>[0]));
+    const people = (await sql`select * from directory_people order by name`) .map((r) => mapPerson(r as Parameters<typeof mapPerson>[0]));
     const listings = (
       await sql`select * from listings order by created_at desc`
-    ).map(mapListing);
+    ) .map((r) => mapListing(r as Parameters<typeof mapListing>[0]));
     const communities = (await sql`select * from communities order by members desc`).map(
       mapCommunity,
     );
     const posts = (
       await sql`select * from posts order by created_at desc limit 80`
-    ).map(mapPost);
-    const discovery = (await sql`select * from discovery_items`).map(mapDiscovery);
+    ) .map((r) => mapPost(r as Parameters<typeof mapPost>[0]));
+    const discovery = (await sql`select * from discovery_items`) .map((r) => mapDiscovery(r as Parameters<typeof mapDiscovery>[0]));
     let replies: ReturnType<typeof mapPostReply>[] = [];
     try {
       replies = (await sql`select * from post_replies order by created_at asc limit 800`).map((r) =>
@@ -53,7 +59,7 @@ export const getListing = createServerFn({ method: "GET" })
     const seller = sellerRows[0] ? mapPerson(sellerRows[0]) : null;
     const related = (
       await sql`select * from listings where category = ${listing.category} and id <> ${id} order by saved_count desc limit 4`
-    ).map(mapListing);
+    ) .map((r) => mapListing(r as Parameters<typeof mapListing>[0]));
     return { listing, seller, related };
   });
 
@@ -65,13 +71,13 @@ export const searchCampus = createServerFn({ method: "GET" })
     const like = `%${q}%`;
     const listings = (
       await sql`select * from listings where lower(title) like ${like} or lower(description) like ${like} or lower(category) like ${like} limit 12`
-    ).map(mapListing);
+    ) .map((r) => mapListing(r as Parameters<typeof mapListing>[0]));
     const people = (
       await sql`select * from directory_people where lower(name) like ${like} or lower(handle) like ${like} limit 8`
-    ).map(mapPerson);
+    ) .map((r) => mapPerson(r as Parameters<typeof mapPerson>[0]));
     const communities = (
       await sql`select * from communities where lower(name) like ${like} or lower(description) like ${like} limit 8`
-    ).map(mapCommunity);
+    ) .map((r) => mapCommunity(r as Parameters<typeof mapCommunity>[0]));
     return { listings, people, communities };
   });
 
@@ -98,7 +104,8 @@ export const listMyP2POrders = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const sql = await getSql();
-    return sql`select * from p2p_orders where buyer_user_id = ${context.userId} or seller_user_id = ${context.userId} order by updated_at desc`;
+    const rows = await sql<P2POrderRow>`select id,buyer_user_id,seller_user_id,listing_id,status,amount_kobo,note,created_at,updated_at from p2p_orders where buyer_user_id = ${context.userId} or seller_user_id = ${context.userId} order by updated_at desc`;
+    return rows;
   });
 
 export const createP2POrder = createServerFn({ method: "POST" })
@@ -118,7 +125,8 @@ export const listMyTracking = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const sql = await getSql();
-    return sql`select * from tracking_items where user_id = ${context.userId} order by updated_at desc`;
+    const rows = await sql<TrackingRow>`select id,user_id,kind,title,status,target_id,metadata,created_at,updated_at from tracking_items where user_id = ${context.userId} order by updated_at desc`;
+    return rows;
   });
 
 export const createTrackingItem = createServerFn({ method: "POST" })
@@ -137,7 +145,8 @@ export const listMyGoals = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const sql = await getSql();
-    return sql`select * from goals where user_id = ${context.userId} order by updated_at desc`;
+    const rows = await sql<GoalRow>`select id,user_id,scope,title,target_value,current_value,status,due_at,created_at,updated_at from goals where user_id = ${context.userId} order by updated_at desc`;
+    return rows;
   });
 
 export const createGoal = createServerFn({ method: "POST" })
@@ -156,7 +165,8 @@ export const listMyHistory = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const sql = await getSql();
-    return sql`select * from history_events where user_id = ${context.userId} order by created_at desc limit 200`;
+    const rows = await sql<HistoryRow>`select id,user_id,event_type,action,entity_id,metadata,created_at from history_events where user_id = ${context.userId} order by created_at desc limit 200`;
+    return rows;
   });
 
 export async function recordHistory(userId: string, eventType: string, action: string, entityId?: string, metadata = "{}") {
@@ -168,7 +178,8 @@ export const listMyMarketingCampaigns = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
     const sql = await getSql();
-    return sql`select * from marketing_campaigns where owner_user_id = ${context.userId} order by updated_at desc`;
+    const rows = await sql<CampaignRow>`select id,owner_user_id,name,objective,status,created_at,updated_at from marketing_campaigns where owner_user_id = ${context.userId} order by updated_at desc`;
+    return rows;
   });
 
 export const createMarketingCampaign = createServerFn({ method: "POST" })
