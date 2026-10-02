@@ -18,7 +18,6 @@ import { canTeach, type CampusRole } from "./roles";
 
 export const getCampusCatalog = createServerFn({ method: "GET" }).handler(
   async () => {
-    await ensureCatalogSeed();
     const sql = await getSql();
     const universities = (await sql`select * from universities order by name`).map(mapUni);
     const people = (await sql`select * from directory_people order by name`).map(mapPerson);
@@ -47,7 +46,6 @@ export const getCampusCatalog = createServerFn({ method: "GET" }).handler(
 export const getListing = createServerFn({ method: "GET" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
-    await ensureCatalogSeed();
     const sql = await getSql();
     const rows = await sql`select * from listings where id = ${id} limit 1`;
     const listing = rows[0] ? mapListing(rows[0]) : null;
@@ -63,7 +61,6 @@ export const getListing = createServerFn({ method: "GET" })
 export const searchCampus = createServerFn({ method: "GET" })
   .validator((q: string) => q.trim().toLowerCase())
   .handler(async ({ data: q }) => {
-    await ensureCatalogSeed();
     if (!q) return { listings: [], people: [], communities: [] };
     const sql = await getSql();
     const like = `%${q}%`;
@@ -99,10 +96,99 @@ async function handleFromName(name: string, userId: string) {
   return `${base}${userId.slice(-4)}`;
 }
 
+export const listMyP2POrders = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    return sql`select * from p2p_orders where buyer_user_id = ${context.userId} or seller_user_id = ${context.userId} order by updated_at desc`;
+  });
+
+export const createP2POrder = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { listingId: string; note?: string }) => input)
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const listing = await sql<{ owner_user_id: string; price_kobo: number }>`select owner_user_id, price_kobo from listings where id = ${data.listingId} limit 1`;
+    if (!listing[0]) throw new Error("Listing not found.");
+    if (listing[0].owner_user_id === context.userId) throw new Error("You cannot order your own listing.");
+    const id = `ord_${crypto.randomUUID()}`;
+    await sql`insert into p2p_orders (id,buyer_user_id,seller_user_id,listing_id,status,amount_kobo,note) values (${id},${context.userId},${listing[0].owner_user_id},${data.listingId},"pending",${listing[0].price_kobo},${data.note?.trim() ?? ""})`;
+    return { id };
+  });
+
+export const listMyTracking = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    return sql`select * from tracking_items where user_id = ${context.userId} order by updated_at desc`;
+  });
+
+export const createTrackingItem = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { kind: string; title: string; targetId?: string }) => input)
+  .handler(async ({ context, data }) => {
+    const title = data.title.trim();
+    if (!title) throw new Error("Tracking item needs a title.");
+    const sql = await getSql();
+    const id = `trk_${crypto.randomUUID()}`;
+    await sql`insert into tracking_items (id,user_id,kind,title,target_id) values (${id},${context.userId},${data.kind},${title},${data.targetId ?? null})`;
+    return { id };
+  });
+
+export const listMyGoals = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    return sql`select * from goals where user_id = ${context.userId} order by updated_at desc`;
+  });
+
+export const createGoal = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { title: string; scope?: string; targetValue?: number; dueAt?: string }) => input)
+  .handler(async ({ context, data }) => {
+    const title = data.title.trim();
+    if (!title) throw new Error("Goal needs a title.");
+    const sql = await getSql();
+    const id = `goal_${crypto.randomUUID()}`;
+    await sql`insert into goals (id,user_id,scope,title,target_value,due_at) values (${id},${context.userId},${data.scope ?? "academic"},${title},${data.targetValue ?? null},${data.dueAt ?? null})`;
+    return { id };
+  });
+
+export const listMyHistory = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    return sql`select * from history_events where user_id = ${context.userId} order by created_at desc limit 200`;
+  });
+
+export async function recordHistory(userId: string, eventType: string, action: string, entityId?: string, metadata = "{}") {
+  const sql = await getSql();
+  await sql`insert into history_events (id,user_id,event_type,action,entity_id,metadata) values (${crypto.randomUUID()},${userId},${eventType},${action},${entityId ?? null},${metadata})`;
+}
+
+export const listMyMarketingCampaigns = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    return sql`select * from marketing_campaigns where owner_user_id = ${context.userId} order by updated_at desc`;
+  });
+
+export const createMarketingCampaign = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { name: string; objective?: string }) => input)
+  .handler(async ({ context, data }) => {
+    const name = data.name.trim();
+    if (!name) throw new Error("Campaign needs a name.");
+    const sql = await getSql();
+    const id = `cmp_${crypto.randomUUID()}`;
+    await sql`insert into marketing_campaigns (id,owner_user_id,name,objective) values (${id},${context.userId},${name},${data.objective ?? ""})`;
+    return { id };
+  });
+
+
 export const getMyProfile = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    await ensureCatalogSeed();
     const sql = await getSql();
     const rows = await sql`select * from student_profiles where user_id = ${context.userId} limit 1`;
     if (rows[0]) return mapProfile(rows[0]);
