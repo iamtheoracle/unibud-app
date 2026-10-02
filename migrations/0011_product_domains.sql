@@ -100,3 +100,16 @@ create table if not exists data_export_jobs (
   file_ref text
 );
 create index if not exists data_export_jobs_user_idx on data_export_jobs (user_id, requested_at desc);
+
+
+create table if not exists user_reports (
+  id text primary key,
+  user_id text not null,
+  kind text not null,
+  body text not null,
+  status text not null default 'open',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists user_reports_user_idx on user_reports(user_id, created_at desc);
