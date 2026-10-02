@@ -52,12 +52,6 @@ function Studies() {
   const [active, setActive] = useState<string | null>(null);
   const [mat, setMat] = useState("");
 
-  const seed = useMutation({
-    mutationFn: () => seedSampleSemester(),
-    onSuccess: (d) => {
-      qc.setQueryData(["studies"], d);
-    },
-  });
   const add = useMutation({
     mutationFn: () =>
       addCourse({
@@ -212,16 +206,7 @@ function Studies() {
           <EmptyState
             title="No semester yet"
             body="Add the courses you are actually taking to build your academic workspace."
-            action={
-              <div className="flex justify-center gap-2">
-                <Button onClick={() => seed.mutate()} disabled={seed.isPending}>
-                  Use sample semester
-                </Button>
-                <Button variant="outline" onClick={() => setOpen(true)}>
-                  Add a course
-                </Button>
-              </div>
-            }
+            action={<Button variant="outline" onClick={() => setOpen(true)}>Add a course</Button>}
           />
         </div>
       ) : (
