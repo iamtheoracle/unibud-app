@@ -23,6 +23,20 @@ export const UNIVERSITIES: University[] = [
   { id: "wits", name: "University of the Witwatersrand", shortName: "Wits", city: "Johannesburg" },
 ];
 
+
+export const CATEGORIES: { id: ListingCategory; label: string; blurb: string }[] = [
+  { id: "accommodation", label: "Stay", blurb: "Hostels, rooms, roommates" },
+  { id: "food", label: "Food", blurb: "Plates, snacks, meal plans" },
+  { id: "fashion", label: "Fashion", blurb: "Thrift, custom, campus fits" },
+  { id: "electronics", label: "Tech", blurb: "Phones, laptops, gear" },
+  { id: "books", label: "Books", blurb: "Texts, past questions, tools" },
+  { id: "beauty", label: "Beauty", blurb: "Hair, barber, care" },
+  { id: "transport", label: "Rides", blurb: "Campus moves and lifts" },
+  { id: "events", label: "Events", blurb: "Tickets, nights, portraits" },
+  { id: "services", label: "Services", blurb: "Skills students already have" },
+  { id: "other", label: "Other", blurb: "Everything else on campus" },
+];
+
 export const PEOPLE: DirectoryPerson[] = [];
 
 export const LISTINGS: Listing[] = [];
