@@ -132,6 +132,7 @@ async function gatePost(
     try {
       json = JSON.parse(text) as GateJson;
     } catch {
+      // The gate may return a non-JSON error body; preserve a structured failure.
       json = {
         ok: false,
         errorMessage: `gate non-JSON response (HTTP ${res.status}): ${text.slice(0, 200)}`,
