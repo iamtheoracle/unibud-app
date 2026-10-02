@@ -2,9 +2,9 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CampusRole } from "./roles";
 import type { IdentityTag } from "./identity-tags";
-import { SEED_SPILLS, type SpillPost, type SpillReply } from "./spill-data";
+import type { SpillPost, SpillReply } from "./spill-data";
 import type { ChatShare } from "@/lib/media/share";
-import { RightsManagement, SEED_ORIGINAL_AUDIO } from "@/lib/music/audio";
+import { RightsManagement, type UnibudAudio } from "@/lib/music/audio";
 
 export type BudShortcut = "top" | "bottom" | "hidden";
 export type ProfileVisibility = "public" | "campus" | "connections";
@@ -197,86 +197,20 @@ type CampusState = {
   patchBudAtlas: (v: Partial<BudAtlas>) => void;
 };
 
-const SEED_NOTES: HumanNote[] = [
-  {
-    id: "n1",
-    kind: "social",
-    title: "Your post just got some love from Tunde.",
-    body: "He reacted to the hostel note you shared with campus.",
-    href: "/",
-    read: false,
-    createdAt: new Date(Date.now() - 8 * 60_000).toISOString(),
-  },
-  {
-    id: "n2",
-    kind: "social",
-    title: "Adaeze Okonkwo accepted your connection request.",
-    body: "You can message her without waiting on a request.",
-    href: "/connect",
-    read: false,
-    createdAt: new Date(Date.now() - 24 * 60_000).toISOString(),
-  },
-  {
-    id: "n3",
-    kind: "communities",
-    title: "UNN Engineering has new replies in a discussion you follow.",
-    body: "Twelve people jumped in since you last looked.",
-    href: "/communities/unn-eng",
-    read: false,
-    createdAt: new Date(Date.now() - 60 * 60_000).toISOString(),
-  },
-  {
-    id: "n4",
-    kind: "events",
-    title: "Reminder: Faculty night is tonight.",
-    body: "Doors from 19:30. Tickets are in Marketplace — Events.",
-    href: "/market",
-    read: true,
-    createdAt: new Date(Date.now() - 4 * 60 * 60_000).toISOString(),
-  },
-  {
-    id: "n5",
-    kind: "class",
-    title: "CSC 301 is live on UniBoard.",
-    body: "Dr. Okoro started Recursion. Joining now can count as live attendance.",
-    href: "/board/csc301",
-    read: false,
-    createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
-  },
-  {
-    id: "n6",
-    kind: "live",
-    title: "Late join is still live.",
-    body: "You can rejoin CSC 301 while the session is open. Recording later will not flip absence.",
-    href: "/board/csc301",
-    read: false,
-    createdAt: new Date(Date.now() - 3 * 60_000).toISOString(),
-  },
-  {
-    id: "n7",
-    kind: "news",
-    title: "Exam timetable is out.",
-    body: "Dates sit on UniBoard and Educational News — not Square.",
-    href: "/news",
-    read: false,
-    createdAt: new Date(Date.now() - 90 * 60_000).toISOString(),
-  },
-];
-
 export const useCampusStore = create<CampusState>()(
   persist(
     (set) => ({
       liked: {},
-      likeCounts: { p1: 28, p2: 14, p3: 41, p5: 63, p8: 9, sp1: 22, sp3: 31, sp6: 18 },
-      following: ["amaka", "adaeze"],
-      followers: ["tunde", "kemi"],
-      connections: ["amaka", "tunde"],
-      incoming: ["chinedu", "kemi", "fatima"],
-      outgoing: ["ibrahim"],
-      recentSearches: ["architecture society", "faculty night", "Adaeze Okonkwo"],
+      likeCounts: {},
+      following: [],
+      followers: [],
+      connections: [],
+      incoming: [],
+      outgoing: [],
+      recentSearches: [],
       localPosts: [],
       myStories: [],
-      notes: SEED_NOTES,
+      notes: [],
       storiesSeen: [],
       showBud: true,
       budShortcut: "bottom",
@@ -303,10 +237,10 @@ export const useCampusStore = create<CampusState>()(
       avatarDataUrl: "",
       legalName: "",
       postReplies: {},
-      spills: SEED_SPILLS,
+      spills: [],
       flaggedSpills: [],
       followedRiffs: [],
-      homeCampusId: "unilag",
+      homeCampusId: "",
       lifeStage: "student",
       hiddenPosts: [],
       savedPosts: [],
@@ -314,7 +248,7 @@ export const useCampusStore = create<CampusState>()(
       commentLikes: {},
       composeOpen: false,
       dropOpen: false,
-      originalAudios: SEED_ORIGINAL_AUDIO,
+      originalAudios: [],
       savedAudioIds: [],
       audioReports: [],
       squareView: "feed",
