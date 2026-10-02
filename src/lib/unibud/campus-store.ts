@@ -4,7 +4,7 @@ import type { CampusRole } from "./roles";
 import type { IdentityTag } from "./identity-tags";
 import type { SpillPost, SpillReply } from "./spill-data";
 import type { ChatShare } from "@/lib/media/share";
-import { RightsManagement, type UnibudAudio } from "@/lib/music/audio";
+import { RightsManagement, type AudioReport, type UnibudAudio } from "@/lib/music/audio";
 
 export type BudShortcut = "top" | "bottom" | "hidden";
 export type ProfileVisibility = "public" | "campus" | "connections";
