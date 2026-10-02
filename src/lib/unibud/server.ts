@@ -29,9 +29,7 @@ export const getCampusCatalog = createServerFn({ method: "GET" }).handler(
     const listings = (
       await sql`select * from listings order by created_at desc`
     ) .map((r) => mapListing(r as Parameters<typeof mapListing>[0]));
-    const communities = (await sql`select * from communities order by members desc`).map(
-      mapCommunity,
-    );
+    const communities = (await sql`select * from communities order by members desc`).map((r) => mapCommunity(r as Parameters<typeof mapCommunity>[0]));
     const posts = (
       await sql`select * from posts order by created_at desc limit 80`
     ) .map((r) => mapPost(r as Parameters<typeof mapPost>[0]));
@@ -53,10 +51,10 @@ export const getListing = createServerFn({ method: "GET" })
   .handler(async ({ data: id }) => {
     const sql = await getSql();
     const rows = await sql`select * from listings where id = ${id} limit 1`;
-    const listing = rows[0] ? mapListing(rows[0]) : null;
+    const listing = rows[0] ? mapListing(rows[0] as Parameters<typeof mapListing>[0]) : null;
     if (!listing) return null;
     const sellerRows = await sql`select * from directory_people where handle = ${listing.sellerHandle} limit 1`;
-    const seller = sellerRows[0] ? mapPerson(sellerRows[0]) : null;
+    const seller = sellerRows[0] ? mapPerson(sellerRows[0] as Parameters<typeof mapPerson>[0]) : null;
     const related = (
       await sql`select * from listings where category = ${listing.category} and id <> ${id} order by saved_count desc limit 4`
     ) .map((r) => mapListing(r as Parameters<typeof mapListing>[0]));
@@ -89,7 +87,7 @@ export const listByCategory = createServerFn({ method: "GET" })
       category === "all"
         ? await sql`select * from listings order by created_at desc`
         : await sql`select * from listings where category = ${category} order by created_at desc`;
-    return rows.map(mapListing);
+    return rows.map((r) => mapListing(r as Parameters<typeof mapListing>[0]));
   });
 
 async function handleFromName(name: string, userId: string) {
@@ -200,7 +198,7 @@ export const getMyProfile = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sql = await getSql();
     const rows = await sql`select * from student_profiles where user_id = ${context.userId} limit 1`;
-    if (rows[0]) return mapProfile(rows[0]);
+    if (rows[0]) return mapProfile(rows[0] as Parameters<typeof mapProfile>[0]);
     return null;
   });
 
