@@ -71,5 +71,5 @@ export const sendBudMessage = createServerFn({ method: "POST" })
     await sql`insert into bud_messages (id, user_id, role, content)
       values (${crypto.randomUUID()}, ${context.userId}, ${"assistant"}, ${reply})`;
     const rows = await sql`select * from bud_messages where user_id = ${context.userId} order by created_at asc limit 40`;
-    return rows.map(mapBud);
+    return rows.map((r) => mapBud(r as Parameters<typeof mapBud>[0]));
   });
