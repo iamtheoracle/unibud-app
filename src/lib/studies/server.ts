@@ -22,22 +22,6 @@ export const getStudies = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => loadStudies(context.userId));
 
-export const seedSampleSemester = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    const sql = await getSql();
-    const existing = await sql`select id from courses where user_id = ${context.userId} limit 1`;
-    if (existing[0]) return loadStudies(context.userId);
-    for (const c of SAMPLE_COURSES) {
-      const id = crypto.randomUUID();
-      await sql`insert into courses (id, user_id, session_label, semester, title, code)
-        values (${id}, ${context.userId}, ${"2026/2027 Academic Session"}, ${"Semester 1"}, ${c.title}, ${c.code})`;
-      await sql`insert into study_materials (id, user_id, course_id, title, kind)
-        values (${crypto.randomUUID()}, ${context.userId}, ${id}, ${`${c.title} — week 1 notes`}, ${"note"})`;
-    }
-    return loadStudies(context.userId);
-  });
-
 export const addCourse = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator((input: { title: string; code: string; sessionLabel: string; semester: string }) => input)
