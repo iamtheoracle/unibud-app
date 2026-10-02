@@ -24,6 +24,12 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Refresh lockfile for validation
+        run: npm install --package-lock-only --ignore-scripts
+
+      - name: Show lockfile reconciliation
+        run: git diff -- package-lock.json
+
       - name: Install dependencies
         run: npm ci
 
