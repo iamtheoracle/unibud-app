@@ -19,7 +19,7 @@ export const listBudMessages = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sql = await getSql();
     const rows = await sql`select * from bud_messages where user_id = ${context.userId} order by created_at asc limit 40`;
-    return rows.map(mapBud);
+    return rows.map((r) => mapBud(r as Parameters<typeof mapBud>[0]));
   });
 
 export const sendBudMessage = createServerFn({ method: "POST" })
