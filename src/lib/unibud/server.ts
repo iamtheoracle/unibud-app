@@ -19,7 +19,9 @@ type P2POrderRow = { id: string; buyer_user_id: string; seller_user_id: string |
 type TrackingRow = { id: string; user_id: string; kind: string; title: string; status: string; target_id: string | null; metadata: string; created_at: string; updated_at: string };
 type GoalRow = { id: string; user_id: string; scope: string; title: string; target_value: number | null; current_value: number; status: string; due_at: string | null; created_at: string; updated_at: string };
 type HistoryRow = { id: string; user_id: string; event_type: string; action: string; entity_id: string | null; metadata: string; created_at: string };
-type CampaignRow = { id: string; owner_user_id: string; name: string; objective: string; status: string; created_at: string; updated_at: string };\n\nasync function notifySlackFeedComment(input: {
+type CampaignRow = { id: string; owner_user_id: string; name: string; objective: string; status: string; created_at: string; updated_at: string };
+
+async function notifySlackFeedComment(input: {
   postId: string;
   postAuthor: string;
   commenter: string;
