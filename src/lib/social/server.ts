@@ -93,6 +93,49 @@ export const myCommunities = createServerFn({ method: "GET" })
     return rows.map((r) => r.community_id);
   });
 
+async function notifySlackFeedComment(input: {
+  postId: string;
+  postAuthor: string;
+  commenter: string;
+  body: string;
+}) {
+  const webhook = process.env.SLACK_FEED_WEBHOOK_URL?.trim();
+  if (!webhook) return;
+  const text = "UNIBUD feed comment\n@" + input.commenter + " commented on @" + input.postAuthor + "'s post:\n“" + input.body + "”\nPost: /?p=" + input.postId;
+  try {
+    await fetch(webhook, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ text }),
+    });
+  } catch {
+    // Slack delivery must never make the user comment fail.
+  }
+}
+export const getPublicProfileActivity = createServerFn({ method: "GET" })
+  .validator((handle: string) => handle.replace(/^@/, "").trim().toLowerCase())
+  .handler(async ({ data: handle }) => {
+    const sql = await getSql();
+    const profiles = await sql<{ user_id: string; handle: string; display_name: string }>`select user_id, handle, display_name from student_profiles where handle = ${handle} limit 1`;
+    const profile = profiles[0];
+    const posts = await sql`select id, community_id, author_handle, body, image, created_at from posts where author_handle = ${handle} order by created_at desc`;
+    let likedPosts: any[] = [];
+    let comments: any[] = [];
+    if (profile) {
+      try {
+        likedPosts = await sql`select p.id, p.community_id, p.author_handle, p.body, p.image, p.created_at, pl.created_at as liked_at from post_likes pl join posts p on p.id = pl.post_id where pl.user_id = ${profile.user_id} order by pl.created_at desc`;
+      } catch { likedPosts = []; }
+      try {
+        comments = await sql`select r.id, r.post_id, r.author_handle, r.body, r.parent_id, r.created_at, p.author_handle as post_author from post_replies r left join posts p on p.id = r.post_id where r.user_id = ${profile.user_id} order by r.created_at desc`;
+      } catch { comments = []; }
+    }
+    return {
+      profile: profile ? { userId: String(profile.user_id), handle: String(profile.handle), displayName: String(profile.display_name) } : null,
+      posts: posts.map((p) => ({ id: String(p.id), communityId: String(p.community_id), authorHandle: String(p.author_handle), body: String(p.body), image: p.image ? String(p.image) : undefined, createdAt: String(p.created_at) })),
+      likedPosts: likedPosts.map((p) => ({ id: String(p.id), communityId: String(p.community_id), authorHandle: String(p.author_handle), body: String(p.body), image: p.image ? String(p.image) : undefined, createdAt: String(p.created_at), likedAt: String(p.liked_at) })),
+      comments: comments.map((r) => ({ id: String(r.id), postId: String(r.post_id), authorHandle: String(r.author_handle), body: String(r.body), parentId: r.parent_id ? String(r.parent_id) : undefined, createdAt: String(r.created_at), postAuthor: r.post_author ? String(r.post_author) : undefined })),
+    };
+  });
 export const createPost = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
   .validator(
