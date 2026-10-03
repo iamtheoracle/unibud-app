@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { createPost } from "@/lib/social/server";
+import { uploadMedia } from "@/lib/media/server";
+import { mediaUrl } from "@/lib/media/types";
 import { sendMessage } from "@/lib/social/server";
 import { useCampusStore } from "@/lib/unibud/campus-store";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
@@ -132,16 +134,26 @@ export function PublishDesk() {
       const credit = musicRef
         ? `\n♪ ${musicRef.sourceType === "ORIGINAL_AUDIO" ? "Original audio" : "Music"} · ${musicRef.title}${musicRef.creatorHandle ? ` · @${musicRef.creatorHandle}` : musicRef.artistName ? ` · ${musicRef.artistName}` : ""}`
         : "";
+      let postImage = baked;
+      if (baked) {
+        const mime = /^data:([^;]+);/.exec(baked)?.[1] ?? "image/jpeg";
+        try {
+          const uploaded = await uploadMedia({ data: { dataUrl: baked, fileName: `square-${Date.now()}.jpg`, mime, kind: "photo" } });
+          if (uploaded.ok) postImage = mediaUrl(uploaded.id);
+        } catch {
+          toast.message("Photo storage was unavailable; publishing the image from this post payload.");
+        }
+      }
       const r = await createPost({
         data: {
           communityId: "unilag-campus",
           body: (caption.trim() || (intent === "reel" ? "Reel" : kind === "reel" ? "Peek" : "Photo")) + credit,
-          image: baked,
+          image: postImage,
           video: clip,
           kind,
         },
       });
-      addPost(r.body, r.handle, { image: baked, video: clip, id: r.id, audioId: musicRef?.audioId });
+      addPost(r.body, r.handle, { image: postImage, video: clip, id: r.id, audioId: musicRef?.audioId });
       if (musicRef?.sourceType === "ORIGINAL_AUDIO" && musicRef.audioId) {
         attachOriginalAudio(musicRef.audioId, r.id);
       } else if (mix.some((m) => m.kind === "voice" || m.kind === "file" || m.kind === "tone")) {
