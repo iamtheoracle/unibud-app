@@ -19,7 +19,22 @@ type P2POrderRow = { id: string; buyer_user_id: string; seller_user_id: string |
 type TrackingRow = { id: string; user_id: string; kind: string; title: string; status: string; target_id: string | null; metadata: string; created_at: string; updated_at: string };
 type GoalRow = { id: string; user_id: string; scope: string; title: string; target_value: number | null; current_value: number; status: string; due_at: string | null; created_at: string; updated_at: string };
 type HistoryRow = { id: string; user_id: string; event_type: string; action: string; entity_id: string | null; metadata: string; created_at: string };
-type CampaignRow = { id: string; owner_user_id: string; name: string; objective: string; status: string; created_at: string; updated_at: string };
+type CampaignRow = { id: string; owner_user_id: string; name: string; objective: string; status: string; created_at: string; updated_at: string };\n\nasync function notifySlackFeedComment(input: {
+  postId: string;
+  postAuthor: string;
+  commenter: string;
+  body: string;
+}) {
+  const webhook = process.env.SLACK_FEED_WEBHOOK_URL?.trim();
+  if (!webhook) return;
+  const text = "UNIBUD feed comment\n@" + input.commenter + " commented on @" + input.postAuthor + "'s post:\n“" + input.body + "”\nPost: /?p=" + input.postId;
+  try {
+    await fetch(webhook, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });
+  } catch {
+    // Slack delivery must never make the user comment fail.
+  }
+}
+
 
 export const getCampusCatalog = createServerFn({ method: "GET" }).handler(
   async () => {
@@ -388,6 +403,15 @@ export const addSquareReply = createServerFn({ method: "POST" })
     const id = `pr_${crypto.randomUUID().slice(0, 10)}`;
     await sql`insert into post_replies (id, post_id, user_id, author_handle, parent_id, body)
       values (${id}, ${data.postId}, ${context.userId}, ${handle}, ${data.parentId ?? null}, ${body})`;
+    const postRows = await sql<{ author_handle: string }>`select author_handle from posts where id = ${data.postId} limit 1`;
+    const postAuthor = postRows[0]?.author_handle ?? "student";
+    if (postAuthor !== handle) {
+      const authorRows = await sql<{ user_id: string }>`select user_id from student_profiles where handle = ${postAuthor} limit 1`;
+      if (authorRows[0]?.user_id) {
+        await notify(String(authorRows[0].user_id), "comment", `@${handle} commented on your post`, body, `/?p=${data.postId}`);
+      }
+    }
+    await notifySlackFeedComment({ postId: data.postId, postAuthor, commenter: handle, body });
     return { id, postId: data.postId, authorHandle: handle, parentId: data.parentId, body, createdAt: new Date().toISOString() };
   });
 
