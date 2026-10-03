@@ -1,0 +1,35 @@
+# Render Blueprint for UNIBUD.
+# The database name matches the free Frankfurt Postgres provisioned for this app.
+services:
+  - type: web
+    name: unibud
+    runtime: node
+    plan: free
+    region: frankfurt
+    repo: https://github.com/iamtheoracle/unibud-app
+    branch: reconcile/unibud-production
+    autoDeploy: true
+    buildCommand: npm ci && npm run build
+    startCommand: npm run db:migrate && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: VITE_AUTH_ENABLED
+        value: "true"
+      - key: BETTER_AUTH_SECRET
+        generateValue: true
+      - key: BETTER_AUTH_URL
+        fromService:
+          type: web
+          name: unibud
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: DATABASE_URL
+        fromDatabase:
+          name: unibud-db
+          property: connectionString
+
+databases:
+  - name: unibud-db
+    plan: free
+    region: frankfurt
+    version: 18

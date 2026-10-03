@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate, useRouter } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { createPost } from "@/lib/social/server";
+import { uploadMedia } from "@/lib/media/server";
+import { mediaUrl } from "@/lib/media/types";
 import { sendMessage } from "@/lib/social/server";
 import { useCampusStore } from "@/lib/unibud/campus-store";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
@@ -10,6 +12,7 @@ import { runExport } from "@/lib/studio/export/engine";
 import { useStudioStore } from "@/lib/studio/store";
 import type { PublishDest } from "@/lib/studio/types";
 import { originalFromPublish } from "@/lib/music/audio";
+import { toast } from "sonner";
 
 const DESTS: { id: PublishDest; label: string }[] = [
   { id: "square", label: "Square" },
@@ -48,7 +51,7 @@ export function PublishDesk() {
   const messageId = useStudioStore((s) => s.messageId);
   const addPost = useCampusStore((s) => s.addPost);
   const registerOriginalAudio = useCampusStore((s) => s.registerOriginalAudio);
-  const useOriginalAudio = useCampusStore((s) => s.useOriginalAudio);
+  const attachOriginalAudio = useCampusStore((s) => s.useOriginalAudio);
   const addStory = useCampusStore((s) => s.addStory);
   const setComposeOpen = useCampusStore((s) => s.setComposeOpen);
   const { user } = useCurrentUserState();
@@ -131,18 +134,28 @@ export function PublishDesk() {
       const credit = musicRef
         ? `\n♪ ${musicRef.sourceType === "ORIGINAL_AUDIO" ? "Original audio" : "Music"} · ${musicRef.title}${musicRef.creatorHandle ? ` · @${musicRef.creatorHandle}` : musicRef.artistName ? ` · ${musicRef.artistName}` : ""}`
         : "";
+      let postImage = baked;
+      if (baked) {
+        const mime = /^data:([^;]+);/.exec(baked)?.[1] ?? "image/jpeg";
+        try {
+          const uploaded = await uploadMedia({ data: { dataUrl: baked, fileName: `square-${Date.now()}.jpg`, mime, kind: "photo" } });
+          if (uploaded.ok) postImage = mediaUrl(uploaded.id);
+        } catch {
+          toast.message("Photo storage was unavailable; publishing the image from this post payload.");
+        }
+      }
       const r = await createPost({
         data: {
           communityId: "unilag-campus",
           body: (caption.trim() || (intent === "reel" ? "Reel" : kind === "reel" ? "Peek" : "Photo")) + credit,
-          image: baked,
+          image: postImage,
           video: clip,
           kind,
         },
       });
-      addPost(r.body, r.handle, { image: baked, video: clip, id: r.id, audioId: musicRef?.audioId });
+      addPost(r.body, r.handle, { image: postImage, video: clip, id: r.id, audioId: musicRef?.audioId });
       if (musicRef?.sourceType === "ORIGINAL_AUDIO" && musicRef.audioId) {
-        useOriginalAudio(musicRef.audioId, r.id);
+        attachOriginalAudio(musicRef.audioId, r.id);
       } else if (mix.some((m) => m.kind === "voice" || m.kind === "file" || m.kind === "tone")) {
         const bed = mix.find((m) => m.kind === "voice" || m.kind === "file" || m.kind === "tone");
         registerOriginalAudio(
@@ -155,7 +168,7 @@ export function PublishDesk() {
         );
       }
       await router.invalidate();
-      toast.success(intent === "reel" || dest === "peek" || intent === "peek" ? "On Peek." : dest === "story" ? "On your story." : "Dropped to Square.");
+      toast.success(intent === "reel" || dest === "peek" || intent === "peek" ? "On Peek." : "Dropped to Square.");
       clearProject();
       setComposeOpen(false);
       if (dest === "peek" || intent === "reel" || intent === "peek") sessionStorage.setItem("unibud-square-mode", "peek");

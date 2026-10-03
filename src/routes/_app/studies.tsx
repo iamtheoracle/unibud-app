@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { EmptyState } from "@/components/unibud/empty";
 import { SignInCard, useAuthReady } from "@/components/unibud/sign-in-gate";
 import { useCampusStore } from "@/lib/unibud/campus-store";
-import { addCourse, addMaterial, addStudySession, getStudies, seedSampleSemester } from "@/lib/studies/server";
+import { addCourse, addMaterial, addStudySession, getStudies } from "@/lib/studies/server";
 import { dropCourse, enrollCourse, listEnrollments } from "@/lib/academic/server";
 import { FACULTIES, LEVELS, PROGRAMMES, boardIdFor, coursesFor } from "@/lib/unibud/academic";
 import { UNIVERSITIES } from "@/lib/unibud/catalog";
@@ -52,12 +52,6 @@ function Studies() {
   const [active, setActive] = useState<string | null>(null);
   const [mat, setMat] = useState("");
 
-  const seed = useMutation({
-    mutationFn: () => seedSampleSemester(),
-    onSuccess: (d) => {
-      qc.setQueryData(["studies"], d);
-    },
-  });
   const add = useMutation({
     mutationFn: () =>
       addCourse({
@@ -211,17 +205,8 @@ function Studies() {
         <div className="mt-6">
           <EmptyState
             title="No semester yet"
-            body="Start from a Computer Engineering sample, or add your own courses."
-            action={
-              <div className="flex justify-center gap-2">
-                <Button onClick={() => seed.mutate()} disabled={seed.isPending}>
-                  Use sample semester
-                </Button>
-                <Button variant="outline" onClick={() => setOpen(true)}>
-                  Add a course
-                </Button>
-              </div>
-            }
+            body="Add the courses you are actually taking to build your academic workspace."
+            action={<Button variant="outline" onClick={() => setOpen(true)}>Add a course</Button>}
           />
         </div>
       ) : (

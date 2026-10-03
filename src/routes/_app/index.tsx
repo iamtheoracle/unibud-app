@@ -25,6 +25,7 @@ function Square() {
   const [lane, setLane] = useState<SquareLane>("on-stream");
   const [peekStart, setPeekStart] = useState<string | undefined>();
   const [shown, setShown] = useState(10);
+  const [sortMode, setSortMode] = useState<"relevant" | "latest">("relevant");
   const localPosts = useCampusStore((s) => s.localPosts);
   const following = useCampusStore((s) => s.following);
   const connections = useCampusStore((s) => s.connections);
@@ -64,7 +65,8 @@ function Square() {
     likeCounts,
     searches,
   };
-  const lanePosts = postsForLane(merged, lane, rankCtx, connections);
+  const rankedLanePosts = postsForLane(merged, lane, rankCtx, connections);
+  const lanePosts = useMemo(() => sortMode === "latest" ? [...rankedLanePosts].sort((a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt)) : rankedLanePosts, [rankedLanePosts, sortMode]);
   const stream = useMemo(() => loopStream(lanePosts, shown), [lanePosts, shown]);
   const sentinel = useRef<HTMLDivElement>(null);
 
@@ -143,6 +145,7 @@ function Square() {
             />
           </div>
           <StreamPicker lane={lane} onChange={chooseLane} />
+          <FeedSort mode={sortMode} onChange={setSortMode} />
           <LaneFeed
             lane={lane}
             stream={stream}
@@ -200,6 +203,20 @@ function StreamPicker({
   );
 }
 
+function FeedSort({ mode, onChange }: { mode: "relevant" | "latest"; onChange: (mode: "relevant" | "latest") => void }) {
+  return (
+    <div className="flex items-center justify-between border-b border-border px-5 py-2">
+      <span className="text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">Feed order</span>
+      <div className="flex gap-1 rounded-full bg-secondary p-1">
+        {(["relevant", "latest"] as const).map((item) => (
+          <button key={item} type="button" onClick={() => onChange(item)} className={cn("h-8 rounded-full px-3 text-xs font-medium", mode === item ? "bg-ink text-paper" : "text-muted-foreground")} aria-pressed={mode === item}>
+            {item === "latest" ? "Latest" : "For you"}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
 function LaneFeed({
   lane,
   stream,

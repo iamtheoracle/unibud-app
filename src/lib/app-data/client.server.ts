@@ -132,6 +132,7 @@ async function gatePost(
     try {
       json = JSON.parse(text) as GateJson;
     } catch {
+      // The gate may return a non-JSON error body; preserve a structured failure.
       json = {
         ok: false,
         errorMessage: `gate non-JSON response (HTTP ${res.status}): ${text.slice(0, 200)}`,
@@ -211,7 +212,9 @@ function tokenIdentityKey(token: string): string {
             .digest("base64url");
         }
       }
-    } catch {}
+    } catch {
+      // Ignore malformed payloads; the opaque token hash remains the stable key.
+    }
   }
   return createHash("sha256").update(token).digest("base64url");
 }

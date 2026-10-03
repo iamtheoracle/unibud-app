@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getSql } from "@/lib/db";
 import { authMiddleware } from "@/lib/auth/middleware";
-import { ensureCatalogSeed } from "./seed";
 import {
   mapCommunity,
   mapDiscovery,
@@ -16,22 +15,42 @@ import {
 import type { ListingCategory, ListingKind, StudentProfile } from "./types";
 import { canTeach, type CampusRole } from "./roles";
 
+type P2POrderRow = { id: string; buyer_user_id: string; seller_user_id: string | null; listing_id: string; status: string; amount_kobo: number; note: string; created_at: string; updated_at: string };
+type TrackingRow = { id: string; user_id: string; kind: string; title: string; status: string; target_id: string | null; metadata: string; created_at: string; updated_at: string };
+type GoalRow = { id: string; user_id: string; scope: string; title: string; target_value: number | null; current_value: number; status: string; due_at: string | null; created_at: string; updated_at: string };
+type HistoryRow = { id: string; user_id: string; event_type: string; action: string; entity_id: string | null; metadata: string; created_at: string };
+type CampaignRow = { id: string; owner_user_id: string; name: string; objective: string; status: string; created_at: string; updated_at: string };
+
+async function notifySlackFeedComment(input: {
+  postId: string;
+  postAuthor: string;
+  commenter: string;
+  body: string;
+}) {
+  const webhook = process.env.SLACK_FEED_WEBHOOK_URL?.trim();
+  if (!webhook) return;
+  const text = "UNIBUD feed comment\n@" + input.commenter + " commented on @" + input.postAuthor + "'s post:\n“" + input.body + "”\nPost: /?p=" + input.postId;
+  try {
+    await fetch(webhook, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ text }) });
+  } catch {
+    // Slack delivery must never make the user comment fail.
+  }
+}
+
+
 export const getCampusCatalog = createServerFn({ method: "GET" }).handler(
   async () => {
-    await ensureCatalogSeed();
     const sql = await getSql();
-    const universities = (await sql`select * from universities order by name`).map(mapUni);
-    const people = (await sql`select * from directory_people order by name`).map(mapPerson);
+    const universities = (await sql`select * from universities order by name`) .map((r) => mapUni(r as Parameters<typeof mapUni>[0]));
+    const people = (await sql`select * from directory_people order by name`) .map((r) => mapPerson(r as Parameters<typeof mapPerson>[0]));
     const listings = (
       await sql`select * from listings order by created_at desc`
-    ).map(mapListing);
-    const communities = (await sql`select * from communities order by members desc`).map(
-      mapCommunity,
-    );
+    ) .map((r) => mapListing(r as Parameters<typeof mapListing>[0]));
+    const communities = (await sql`select * from communities order by members desc`).map((r) => mapCommunity(r as Parameters<typeof mapCommunity>[0]));
     const posts = (
       await sql`select * from posts order by created_at desc limit 80`
-    ).map(mapPost);
-    const discovery = (await sql`select * from discovery_items`).map(mapDiscovery);
+    ) .map((r) => mapPost(r as Parameters<typeof mapPost>[0]));
+    const discovery = (await sql`select * from discovery_items`) .map((r) => mapDiscovery(r as Parameters<typeof mapDiscovery>[0]));
     let replies: ReturnType<typeof mapPostReply>[] = [];
     try {
       replies = (await sql`select * from post_replies order by created_at asc limit 800`).map((r) =>
@@ -47,48 +66,45 @@ export const getCampusCatalog = createServerFn({ method: "GET" }).handler(
 export const getListing = createServerFn({ method: "GET" })
   .validator((id: string) => id)
   .handler(async ({ data: id }) => {
-    await ensureCatalogSeed();
     const sql = await getSql();
     const rows = await sql`select * from listings where id = ${id} limit 1`;
-    const listing = rows[0] ? mapListing(rows[0]) : null;
+    const listing = rows[0] ? mapListing(rows[0] as Parameters<typeof mapListing>[0]) : null;
     if (!listing) return null;
     const sellerRows = await sql`select * from directory_people where handle = ${listing.sellerHandle} limit 1`;
-    const seller = sellerRows[0] ? mapPerson(sellerRows[0]) : null;
+    const seller = sellerRows[0] ? mapPerson(sellerRows[0] as Parameters<typeof mapPerson>[0]) : null;
     const related = (
       await sql`select * from listings where category = ${listing.category} and id <> ${id} order by saved_count desc limit 4`
-    ).map(mapListing);
+    ) .map((r) => mapListing(r as Parameters<typeof mapListing>[0]));
     return { listing, seller, related };
   });
 
 export const searchCampus = createServerFn({ method: "GET" })
   .validator((q: string) => q.trim().toLowerCase())
   .handler(async ({ data: q }) => {
-    await ensureCatalogSeed();
     if (!q) return { listings: [], people: [], communities: [] };
     const sql = await getSql();
     const like = `%${q}%`;
     const listings = (
       await sql`select * from listings where lower(title) like ${like} or lower(description) like ${like} or lower(category) like ${like} limit 12`
-    ).map(mapListing);
+    ) .map((r) => mapListing(r as Parameters<typeof mapListing>[0]));
     const people = (
       await sql`select * from directory_people where lower(name) like ${like} or lower(handle) like ${like} limit 8`
-    ).map(mapPerson);
+    ) .map((r) => mapPerson(r as Parameters<typeof mapPerson>[0]));
     const communities = (
       await sql`select * from communities where lower(name) like ${like} or lower(description) like ${like} limit 8`
-    ).map(mapCommunity);
+    ) .map((r) => mapCommunity(r as Parameters<typeof mapCommunity>[0]));
     return { listings, people, communities };
   });
 
 export const listByCategory = createServerFn({ method: "GET" })
   .validator((category: ListingCategory | "all") => category)
   .handler(async ({ data: category }) => {
-    await ensureCatalogSeed();
     const sql = await getSql();
     const rows =
       category === "all"
         ? await sql`select * from listings order by created_at desc`
         : await sql`select * from listings where category = ${category} order by created_at desc`;
-    return rows.map(mapListing);
+    return rows.map((r) => mapListing(r as Parameters<typeof mapListing>[0]));
   });
 
 async function handleFromName(name: string, userId: string) {
@@ -99,13 +115,107 @@ async function handleFromName(name: string, userId: string) {
   return `${base}${userId.slice(-4)}`;
 }
 
+export const listMyP2POrders = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    const rows = await sql<P2POrderRow>`select id,buyer_user_id,seller_user_id,listing_id,status,amount_kobo,note,created_at,updated_at from p2p_orders where buyer_user_id = ${context.userId} or seller_user_id = ${context.userId} order by updated_at desc`;
+    return rows;
+  });
+
+export const createP2POrder = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { listingId: string; note?: string }) => input)
+  .handler(async ({ context, data }) => {
+    const sql = await getSql();
+    const listing = await sql<{ owner_user_id: string; price_kobo: number }>`select owner_user_id, price_kobo from listings where id = ${data.listingId} limit 1`;
+    if (!listing[0]) throw new Error("Listing not found.");
+    if (listing[0].owner_user_id === context.userId) throw new Error("You cannot order your own listing.");
+    const id = `ord_${crypto.randomUUID()}`;
+    await sql`insert into p2p_orders (id,buyer_user_id,seller_user_id,listing_id,status,amount_kobo,note) values (${id},${context.userId},${listing[0].owner_user_id},${data.listingId},"pending",${listing[0].price_kobo},${data.note?.trim() ?? ""})`;
+    return { id };
+  });
+
+export const listMyTracking = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    const rows = await sql<TrackingRow>`select id,user_id,kind,title,status,target_id,metadata,created_at,updated_at from tracking_items where user_id = ${context.userId} order by updated_at desc`;
+    return rows;
+  });
+
+export const createTrackingItem = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { kind: string; title: string; targetId?: string }) => input)
+  .handler(async ({ context, data }) => {
+    const title = data.title.trim();
+    if (!title) throw new Error("Tracking item needs a title.");
+    const sql = await getSql();
+    const id = `trk_${crypto.randomUUID()}`;
+    await sql`insert into tracking_items (id,user_id,kind,title,target_id) values (${id},${context.userId},${data.kind},${title},${data.targetId ?? null})`;
+    return { id };
+  });
+
+export const listMyGoals = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    const rows = await sql<GoalRow>`select id,user_id,scope,title,target_value,current_value,status,due_at,created_at,updated_at from goals where user_id = ${context.userId} order by updated_at desc`;
+    return rows;
+  });
+
+export const createGoal = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { title: string; scope?: string; targetValue?: number; dueAt?: string }) => input)
+  .handler(async ({ context, data }) => {
+    const title = data.title.trim();
+    if (!title) throw new Error("Goal needs a title.");
+    const sql = await getSql();
+    const id = `goal_${crypto.randomUUID()}`;
+    await sql`insert into goals (id,user_id,scope,title,target_value,due_at) values (${id},${context.userId},${data.scope ?? "academic"},${title},${data.targetValue ?? null},${data.dueAt ?? null})`;
+    return { id };
+  });
+
+export const listMyHistory = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    const rows = await sql<HistoryRow>`select id,user_id,event_type,action,entity_id,metadata,created_at from history_events where user_id = ${context.userId} order by created_at desc limit 200`;
+    return rows;
+  });
+
+export async function recordHistory(userId: string, eventType: string, action: string, entityId?: string, metadata = "{}") {
+  const sql = await getSql();
+  await sql`insert into history_events (id,user_id,event_type,action,entity_id,metadata) values (${crypto.randomUUID()},${userId},${eventType},${action},${entityId ?? null},${metadata})`;
+}
+
+export const listMyMarketingCampaigns = createServerFn({ method: "GET" })
+  .middleware([authMiddleware])
+  .handler(async ({ context }) => {
+    const sql = await getSql();
+    const rows = await sql<CampaignRow>`select id,owner_user_id,name,objective,status,created_at,updated_at from marketing_campaigns where owner_user_id = ${context.userId} order by updated_at desc`;
+    return rows;
+  });
+
+export const createMarketingCampaign = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { name: string; objective?: string }) => input)
+  .handler(async ({ context, data }) => {
+    const name = data.name.trim();
+    if (!name) throw new Error("Campaign needs a name.");
+    const sql = await getSql();
+    const id = `cmp_${crypto.randomUUID()}`;
+    await sql`insert into marketing_campaigns (id,owner_user_id,name,objective) values (${id},${context.userId},${name},${data.objective ?? ""})`;
+    return { id };
+  });
+
+
 export const getMyProfile = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => {
-    await ensureCatalogSeed();
     const sql = await getSql();
     const rows = await sql`select * from student_profiles where user_id = ${context.userId} limit 1`;
-    if (rows[0]) return mapProfile(rows[0]);
+    if (rows[0]) return mapProfile(rows[0] as Parameters<typeof mapProfile>[0]);
     return null;
   });
 
@@ -115,7 +225,7 @@ export const upsertMyProfile = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const sql = await getSql();
     const existing = await sql`select * from student_profiles where user_id = ${context.userId} limit 1`;
-    const existingProfile = existing[0] ? mapProfile(existing[0]) : null;
+    const existingProfile = existing[0] ? mapProfile(existing[0] as Parameters<typeof mapProfile>[0]) : null;
     const displayName =
       (data.displayName ?? existingProfile?.displayName ?? "Student").trim() || "Student";
     const handle =
@@ -138,7 +248,7 @@ export const upsertMyProfile = createServerFn({ method: "POST" })
         values (${context.userId}, ${displayName}, ${handle}, ${universityId}, ${program}, ${year}, ${bio}, ${campusRole}, ${onboardingDone})`;
     }
     const rows = await sql`select * from student_profiles where user_id = ${context.userId} limit 1`;
-    return mapProfile(rows[0]);
+    return mapProfile(rows[0] as Parameters<typeof mapProfile>[0]);
   });
 
 export const toggleSave = createServerFn({ method: "POST" })
@@ -210,7 +320,20 @@ export const createListing = createServerFn({ method: "POST" })
       ${data.location.trim() || "Campus"}, ${"[]"}
     )`;
     const rows = await sql`select * from listings where id = ${id} limit 1`;
-    return mapListing(rows[0]);
+    return mapListing(rows[0] as Parameters<typeof mapListing>[0]);
+  });
+
+export const createUserReport = createServerFn({ method: "POST" })
+  .middleware([authMiddleware])
+  .validator((input: { kind: string; body: string }) => input)
+  .handler(async ({ context, data }) => {
+    const body = data.body.trim();
+    if (!body) throw new Error("Report details are required.");
+    const kind = data.kind.trim() || "problem";
+    const sql = await getSql();
+    const id = `report_${crypto.randomUUID()}`;
+    await sql`insert into user_reports (id,user_id,kind,body) values (${id},${context.userId},${kind},${body})`;
+    return { id };
   });
 
 export const listNotes = createServerFn({ method: "GET" })
@@ -218,7 +341,7 @@ export const listNotes = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const sql = await getSql();
     const rows = await sql`select * from notifications where user_id = ${context.userId} order by created_at desc limit 40`;
-    return rows.map(mapNote);
+    return rows.map((r) => mapNote(r as Parameters<typeof mapNote>[0]));
   });
 
 /** Server gate for Tutor Mode. Class Governor does not pass. */
@@ -282,6 +405,15 @@ export const addSquareReply = createServerFn({ method: "POST" })
     const id = `pr_${crypto.randomUUID().slice(0, 10)}`;
     await sql`insert into post_replies (id, post_id, user_id, author_handle, parent_id, body)
       values (${id}, ${data.postId}, ${context.userId}, ${handle}, ${data.parentId ?? null}, ${body})`;
+    const postRows = await sql<{ author_handle: string }>`select author_handle from posts where id = ${data.postId} limit 1`;
+    const postAuthor = postRows[0]?.author_handle ?? "student";
+    if (postAuthor !== handle) {
+      const authorRows = await sql<{ user_id: string }>`select user_id from student_profiles where handle = ${postAuthor} limit 1`;
+      if (authorRows[0]?.user_id) {
+        await notify(String(authorRows[0].user_id), "comment", `@${handle} commented on your post`, body, `/?p=${data.postId}`);
+      }
+    }
+    await notifySlackFeedComment({ postId: data.postId, postAuthor, commenter: handle, body });
     return { id, postId: data.postId, authorHandle: handle, parentId: data.parentId, body, createdAt: new Date().toISOString() };
   });
 

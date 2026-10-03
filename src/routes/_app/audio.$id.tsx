@@ -30,83 +30,84 @@ function AudioPage() {
     );
   }
 
-  const person = personByHandle(audio.creatorHandle ?? "");
-  const uses = localPosts.filter((p) => p.audioId === audio.audioId || audio.usedBy.includes(p.id));
-  const on = saved.includes(audio.audioId);
+  const selectedAudio = audio;
+  const person = personByHandle(selectedAudio.creatorHandle ?? "");
+  const uses = localPosts.filter((p) => p.audioId === selectedAudio.audioId || selectedAudio.usedBy.includes(p.id));
+  const on = saved.includes(selectedAudio.audioId);
 
   function useIt() {
-    if (audio.status === "removed" || audio.status === "restricted") {
+    if (selectedAudio.status === "removed" || selectedAudio.status === "restricted") {
       toast.message("This audio isn’t available.");
       return;
     }
     const studio = useStudioStore.getState();
     studio.snapshot();
     studio.addMix({
-      id: `oa-${audio.audioId}`,
+      id: `oa-${selectedAudio.audioId}`,
       kind: "catalogue",
-      name: audio.title,
-      src: audio.src,
+      name: selectedAudio.title,
+      src: selectedAudio.src,
       volume: 0.85,
       mute: false,
       fadeIn: 0,
       fadeOut: 0,
-      artistName: person?.name ?? audio.creatorHandle,
-      trackId: audio.audioId,
+      artistName: person?.name ?? selectedAudio.creatorHandle,
+      trackId: selectedAudio.audioId,
     });
     studio.setMusicRef({
       providerId: "unibud-original",
-      trackId: audio.audioId,
-      audioId: audio.audioId,
-      title: audio.title,
-      artistName: person?.name ?? audio.creatorHandle,
+      trackId: selectedAudio.audioId,
+      audioId: selectedAudio.audioId,
+      title: selectedAudio.title,
+      artistName: person?.name ?? selectedAudio.creatorHandle,
       startMs: 0,
-      durationMs: audio.durationMs,
+      durationMs: selectedAudio.durationMs,
       entitlement: "free",
       sourceType: "ORIGINAL_AUDIO",
-      creatorHandle: audio.creatorHandle,
+      creatorHandle: selectedAudio.creatorHandle,
     });
     studio.setView("camera");
     setComposeOpen(true);
-    toast.message(`Using “${audio.title}” — still ${person?.name ?? audio.creatorHandle}’s original.`);
+    toast.message(`Using “${selectedAudio.title}” — still ${person?.name ?? selectedAudio.creatorHandle}’s original.`);
   }
 
   return (
     <main className="px-5 py-6">
-      <p className="kicker">{audio.sourceType === "LICENSED_MUSIC" ? "Music" : "Original audio"}</p>
-      <h1 className="mt-2 font-display text-4xl">{audio.title}</h1>
-      {audio.sourceType === "ORIGINAL_AUDIO" ? (
+      <p className="kicker">{selectedAudio.sourceType === "LICENSED_MUSIC" ? "Music" : "Original audio"}</p>
+      <h1 className="mt-2 font-display text-4xl">{selectedAudio.title}</h1>
+      {selectedAudio.sourceType === "ORIGINAL_AUDIO" ? (
         <p className="mt-2 text-sm text-muted-foreground">
           by{" "}
-          {audio.creatorHandle ? (
-            <Link to="/u/$handle" params={{ handle: audio.creatorHandle }} className="font-medium text-ink">
-              {person?.name ?? audio.creatorHandle}
+          {selectedAudio.creatorHandle ? (
+            <Link to="/u/$handle" params={{ handle: selectedAudio.creatorHandle }} className="font-medium text-ink">
+              {person?.name ?? selectedAudio.creatorHandle}
             </Link>
           ) : (
             "a UNIBUD creator"
           )}
-          {audio.claimedOriginal ? " · claimed original — reports still apply" : null}
+          {selectedAudio.claimedOriginal ? " · claimed original — reports still apply" : null}
         </p>
       ) : (
-        <p className="mt-2 text-sm text-muted-foreground">{audio.artistName} · licensed catalogue</p>
+        <p className="mt-2 text-sm text-muted-foreground">{selectedAudio.artistName} · licensed catalogue</p>
       )}
       <p className="mt-1 text-xs text-muted-foreground">
-        {audio.usageCount} use{audio.usageCount === 1 ? "" : "s"}
-        {audio.durationMs ? ` · ${(audio.durationMs / 1000).toFixed(1)}s` : ""}
-        {audio.status !== "active" ? ` · ${audio.status}` : ""}
+        {selectedAudio.usageCount} use{selectedAudio.usageCount === 1 ? "" : "s"}
+        {selectedAudio.durationMs ? ` · ${(selectedAudio.durationMs / 1000).toFixed(1)}s` : ""}
+        {selectedAudio.status !== "active" ? ` · ${selectedAudio.status}` : ""}
       </p>
       <div className="mt-4 flex flex-wrap gap-2">
         <Button
           size="sm"
           variant="secondary"
-          disabled={audio.sourceType === "LICENSED_MUSIC" && !UnibudMusic.ready()}
+          disabled={selectedAudio.sourceType === "LICENSED_MUSIC" && !UnibudMusic.ready()}
           onClick={() => {
-            if (audio.src) {
+            if (selectedAudio.src) {
               const el = document.getElementById("audio-preview") as HTMLAudioElement | null;
               void el?.play();
               return;
             }
             toast.message(
-              audio.sourceType === "LICENSED_MUSIC"
+              selectedAudio.sourceType === "LICENSED_MUSIC"
                 ? UnibudMusic.reason()
                 : "This original has no detached stem yet. Use audio still attaches the credit.",
             );
@@ -114,27 +115,27 @@ function AudioPage() {
         >
           Preview
         </Button>
-        <Button size="sm" onClick={useIt} disabled={audio.status !== "active"}>
+        <Button size="sm" onClick={useIt} disabled={selectedAudio.status !== "active"}>
           Use audio
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => (on ? unsaveAudio(audio.audioId) : saveAudio(audio.audioId))}>
+        <Button size="sm" variant="ghost" onClick={() => (on ? unsaveAudio(selectedAudio.audioId) : saveAudio(selectedAudio.audioId))}>
           {on ? "Saved" : "Save"}
         </Button>
-        <Button size="sm" variant="ghost" onClick={() => reportAudio(audio.audioId, "rights")}>
+        <Button size="sm" variant="ghost" onClick={() => reportAudio(selectedAudio.audioId, "rights")}>
           Report
         </Button>
         <Button
           size="sm"
           variant="ghost"
           onClick={() => {
-            useCampusStore.getState().setPendingShare({ kind: "audio", audioId: audio.audioId, title: audio.title });
+            useCampusStore.getState().setPendingShare({ kind: "audio", audioId: selectedAudio.audioId, title: selectedAudio.title });
             void toast.message("Open a chat and attach Audio — or share from Chat.");
           }}
         >
           Share
         </Button>
       </div>
-      {audio.src ? <audio id="audio-preview" className="mt-3 w-full" src={audio.src} controls /> : null}
+      {selectedAudio.src ? <audio id="audio-preview" className="mt-3 w-full" src={selectedAudio.src} controls /> : null}
       <p className="mt-8 text-[11px] font-semibold tracking-[0.14em] text-muted-foreground uppercase">Used in</p>
       {uses.length ? (
         <ul className="mt-2 space-y-2">
@@ -150,7 +151,7 @@ function AudioPage() {
       ) : (
         <p className="mt-2 text-sm text-muted-foreground">The original post is the first use. Reuses will list here.</p>
       )}
-      {!UnibudMusic.ready() && audio.sourceType === "LICENSED_MUSIC" ? (
+      {!UnibudMusic.ready() && selectedAudio.sourceType === "LICENSED_MUSIC" ? (
         <p className="mt-6 text-xs text-muted-foreground">{UnibudMusic.reason()}</p>
       ) : null}
     </main>

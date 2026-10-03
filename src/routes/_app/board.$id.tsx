@@ -29,24 +29,16 @@ function UniBoard() {
   const [inClass, setInClass] = useState(false);
   const qc = useQueryClient();
 
-  if (!course) {
-    return (
-      <main className="px-5 py-10">
-        <p className="text-sm text-muted-foreground">That UniBoard is not in the catalogue.</p>
-        <Link to="/board" className="mt-3 inline-block text-sm font-medium">Back to Board</Link>
-      </main>
-    );
-  }
-
-  const session = BOARD_SESSIONS.find((s) => s.id === course.boardSessionId || s.course === course.code);
+  const session = course ? BOARD_SESSIONS.find((s) => s.id === course.boardSessionId || s.course === course.code) : undefined;
   const present = session ? liveAttendance[session.id] === "present" : false;
   const inRoom = session ? livePresence[session.id] === "in" : false;
-  const pods = EDU_PODCASTS.filter((p) => p.course === course.code);
-  const budMedia = BUD_MEDIA.filter((m) => m.title.includes(course.code));
+  const pods = EDU_PODCASTS.filter((p) => p.course === course?.code);
+  const budMedia = BUD_MEDIA.filter((m) => course?.code ? m.title.includes(course.code) : false);
 
   const anns = useQuery({
-    queryKey: ["anns", course.code],
-    queryFn: () => listAnnouncements({ data: course.code }),
+    queryKey: ["anns", course?.code ?? id],
+    queryFn: () => listAnnouncements({ data: course?.code ?? id }),
+    enabled: Boolean(course),
   });
   const questions = useQuery({
     queryKey: ["q", session?.id],
@@ -60,20 +52,29 @@ function UniBoard() {
   });
 
   const sendQ = useMutation({
-    mutationFn: () => askInClass({ data: { sessionId: session!.id, body: q } }),
+    mutationFn: () => { if (!session) throw new Error("No live session."); return askInClass({ data: { sessionId: session.id, body: q } }); },
     onSuccess: (d) => {
       setQ("");
       qc.setQueryData(["q", session?.id], d);
     },
   });
   const sendAnn = useMutation({
-    mutationFn: () => postAnnouncement({ data: { courseCode: course.code, title: annTitle, body: annBody } }),
+    mutationFn: () => { if (!course) throw new Error("Course not found."); return postAnnouncement({ data: { courseCode: course.code, title: annTitle, body: annBody } }); },
     onSuccess: (d) => {
       setAnnTitle("");
       setAnnBody("");
-      qc.setQueryData(["anns", course.code], d);
+      qc.setQueryData(["anns", course?.code ?? id], d);
     },
   });
+
+  if (!course) {
+    return (
+      <main className="px-5 py-10">
+        <p className="text-sm text-muted-foreground">That UniBoard is not in the catalogue.</p>
+        <Link to="/board" className="mt-3 inline-block text-sm font-medium">Back to Board</Link>
+      </main>
+    );
+  }
 
   async function join() {
     if (!session) return;
