@@ -107,6 +107,8 @@ type CampusState = {
   avatarDataUrl: string;
   legalName: string;
   postReplies: Record<string, SpillReply[]>;
+  dataHistoryDays: number;
+  autoCleanup: boolean;
   spills: SpillPost[];
   flaggedSpills: string[];
   followedRiffs: string[];
@@ -138,6 +140,7 @@ type CampusState = {
   clearSearches: () => void;
   removeSearch: (q: string) => void;
   addPost: (body: string, handle: string, media?: { image?: string; video?: string; id?: string; audioId?: string }) => void;
+  updateLocalPost: (id: string, body: string) => void;
   addStory: (s: LocalStory) => void;
   markAllRead: () => void;
   markRead: (id: string) => void;
@@ -193,6 +196,8 @@ type CampusState = {
   setPendingShare: (v?: ChatShare) => void;
   setSquareView: (v: "feed" | "peek") => void;
   setPrefs: (v: Partial<Prefs>) => void;
+  setDataHistoryDays: (v: number) => void;
+  setAutoCleanup: (v: boolean) => void;
   addFixerRating: (n: number) => void;
   patchBudAtlas: (v: Partial<BudAtlas>) => void;
 };
@@ -237,6 +242,8 @@ export const useCampusStore = create<CampusState>()(
       avatarDataUrl: "",
       legalName: "",
       postReplies: {},
+      dataHistoryDays: 365,
+      autoCleanup: false,
       spills: [],
       flaggedSpills: [],
       followedRiffs: [],
@@ -311,6 +318,8 @@ export const useCampusStore = create<CampusState>()(
             ...s.localPosts,
           ],
         })),
+      updateLocalPost: (id, body) =>
+        set((s) => ({ localPosts: s.localPosts.map((p) => (p.id === id ? { ...p, body } : p)) })),
       addStory: (story) =>
         set((s) => ({ myStories: [story, ...(s.myStories ?? [])].slice(0, 12) })),
       markAllRead: () => set((s) => ({ notes: s.notes.map((n) => ({ ...n, read: true })) })),
@@ -457,6 +466,8 @@ export const useCampusStore = create<CampusState>()(
       setPendingShare: (pendingShare) => set({ pendingShare }),
       setSquareView: (squareView) => set({ squareView }),
       setPrefs: (v) => set((s) => ({ prefs: { ...s.prefs, ...v } })),
+      setDataHistoryDays: (v) => set({ dataHistoryDays: Math.max(7, Math.min(3650, v)) }),
+      setAutoCleanup: (v) => set({ autoCleanup: v }),
       addFixerRating: (n) =>
         set((s) => ({
           fixerRatings: [...(s.fixerRatings ?? []), Math.min(5, Math.max(1, Math.round(n)))].slice(-40),
