@@ -95,6 +95,13 @@ function Settings() {
         ))}
       </div>
 
+      <p className="mt-8 text-xs font-medium tracking-wide text-muted-foreground uppercase">Data & history</p>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        <Link to="/data-preferences" className="rounded-2xl bg-card p-4 ring-1 ring-border"><p className="text-sm font-medium">Data Preferences</p><p className="mt-1 text-xs text-muted-foreground">Retention and automatic cleanup.</p></Link>
+        <Link to="/account-activity" className="rounded-2xl bg-card p-4 ring-1 ring-border"><p className="text-sm font-medium">Account Activity</p><p className="mt-1 text-xs text-muted-foreground">Review recent additions and removals.</p></Link>
+        <Link to="/data-list" className="rounded-2xl bg-card p-4 ring-1 ring-border"><p className="text-sm font-medium">Data Management</p><p className="mt-1 text-xs text-muted-foreground">View, edit, and remove stored posts.</p></Link>
+      </div>
+
       <p className="mt-8 text-xs font-medium tracking-wide text-muted-foreground uppercase">Preferences</p>
       <ul className="mt-2 divide-y divide-border rounded-2xl bg-card ring-1 ring-border">
         <Toggle label="Push-style alerts in the app" value={prefs.push} onChange={(v) => setPrefs({ push: v })} />
