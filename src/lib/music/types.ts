@@ -7,6 +7,8 @@ export type MusicLayer =
   | "edit" // temporary Studio scratch audio
   | "tone"; // generated pulse, not a song
 
+export type CatalogueStatus = "unprovisioned" | "ready" | "degraded";
+
 export type Entitlement = "unavailable" | "preview" | "ads" | "free" | "premium";
 
 export type TerritoryCode = string;

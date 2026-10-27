@@ -10,12 +10,14 @@ import { academicLine, canViewAcademic, sharedContext, type CampusLens } from "@
 import { tagLabel } from "@/lib/unibud/identity-tags";
 import { relativeTime } from "@/lib/unibud/format";
 import { cn } from "@/lib/utils";
+import { getPublicProfileActivity } from "@/lib/social/server";
 
-export const Route = createFileRoute("/_app/u/$handle")({ component: PublicProfile });
+export const Route = createFileRoute("/_app/u/$handle")({ loader: ({ params }) => getPublicProfileActivity({ data: params.handle }), component: PublicProfile });
 
 function PublicProfile() {
   const { handle } = Route.useParams();
   const person = personByHandle(handle);
+  const activity = Route.useLoaderData();
   const connections = useCampusStore((s) => s.connections);
   const following = useCampusStore((s) => s.following);
   const homeCampusId = useCampusStore((s) => s.homeCampusId);
@@ -99,27 +101,22 @@ function PublicProfile() {
       </div>
 
       {ctx === "social" ? (
-        <>
-          {posts.length ? (
-            <section className="mt-8">
-              <h2 className="text-sm font-medium">Posts</h2>
-              <ul className="mt-2 space-y-2">
-                {posts.map((p) => {
-                  const community = COMMUNITIES.find((c) => c.id === p.communityId);
-                  return (
-                    <li key={p.id} className="rounded-xl bg-card p-3 ring-1 ring-border">
-                      <p className="text-sm">{p.body}</p>
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {community?.name} · {relativeTime(p.createdAt)}
-                      </p>
-                    </li>
-                  );
-                })}
-              </ul>
-            </section>
-          ) : null}
-        </>
-      ) : canSeeAcademic ? (
+        <section className="mt-8">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div className="rounded-xl bg-card p-3 ring-1 ring-border"><p className="text-lg font-semibold">{activity.posts.length}</p><p className="text-[11px] text-muted-foreground">Posts</p></div>
+            <div className="rounded-xl bg-card p-3 ring-1 ring-border"><p className="text-lg font-semibold">{activity.likedPosts.length}</p><p className="text-[11px] text-muted-foreground">Likes</p></div>
+            <div className="rounded-xl bg-card p-3 ring-1 ring-border"><p className="text-lg font-semibold">{activity.comments.length}</p><p className="text-[11px] text-muted-foreground">Comments</p></div>
+          </div>
+          <section className="mt-7"><h2 className="text-sm font-medium">Post history</h2><ul className="mt-2 space-y-2">
+            {activity.posts.map((p) => <li key={p.id} className="rounded-xl bg-card p-3 ring-1 ring-border"><p className="text-sm">{p.body}</p>{p.image ? <img src={p.image} alt="" className="mt-2 h-36 w-full rounded-xl object-cover" /> : null}<p className="mt-2 text-xs text-muted-foreground">{relativeTime(p.createdAt)}</p></li>)}
+          </ul></section>
+          <section className="mt-7"><h2 className="text-sm font-medium">Liked posts</h2><ul className="mt-2 space-y-2">
+            {activity.likedPosts.map((p) => <li key={"like-"+p.id} className="rounded-xl bg-card p-3 ring-1 ring-border"><p className="text-sm">{p.body}</p><p className="mt-2 text-xs text-muted-foreground">by @{p.authorHandle} · liked {relativeTime(p.likedAt)}</p></li>)}
+          </ul></section>
+          <section className="mt-7"><h2 className="text-sm font-medium">Comment history</h2><ul className="mt-2 space-y-2">
+            {activity.comments.map((r) => <li key={"comment-"+r.id} className="rounded-xl bg-card p-3 ring-1 ring-border"><p className="text-sm">{r.body}</p><p className="mt-2 text-xs text-muted-foreground">on @{r.postAuthor ?? "student"}’s post · {relativeTime(r.createdAt)}</p></li>)}
+          </ul></section>
+        </section>      ) : canSeeAcademic ? (
         <>
           <p className="mt-4 text-xs font-medium">{roleLabel(role, person.program)}</p>
           <p className="mt-1 text-xs text-muted-foreground">{academicLine(person)}</p>

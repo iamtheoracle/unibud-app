@@ -114,7 +114,7 @@ function Login() {
         </Link>
         <h2 className="font-display text-3xl font-medium">Sign in</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Use a campus account. Your wallet, chats, and semester stay on this device’s session.
+          Sign in to access your account, chats, academic workspace, and other user-owned data.
         </p>
 
         {authEnabled ? (

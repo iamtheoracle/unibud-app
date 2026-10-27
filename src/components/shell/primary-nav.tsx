@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export const PRIMARY_NAV = [
   { to: "/", label: "Square", icon: LayoutGrid },
   { to: "/connect", label: "Connect", icon: UserPlus },
-  { to: "/communities", label: "Quad", icon: Users },
+  { to: "/studies", label: "Quad", icon: Users },
   { to: "/messages", label: "Chat", icon: MessageCircle },
 ] as const;
 

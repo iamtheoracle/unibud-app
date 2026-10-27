@@ -6,37 +6,17 @@ import { SAMPLE_COURSES } from "@/lib/unibud/catalog";
 
 async function loadStudies(userId: string) {
   const sql = await getSql();
-  const courses = (await sql`select * from courses where user_id = ${userId} order by code`).map(
-    mapCourse,
-  );
-  const materials = (await sql`select * from study_materials where user_id = ${userId}`).map(
-    mapMaterial,
-  );
+  const courses = (await sql`select * from courses where user_id = ${userId} order by code`).map((r) => mapCourse(r as Parameters<typeof mapCourse>[0]));
+  const materials = (await sql`select * from study_materials where user_id = ${userId}`).map((r) => mapMaterial(r as Parameters<typeof mapMaterial>[0]));
   const sessions = (
     await sql`select * from study_sessions where user_id = ${userId} order by starts_at`
-  ).map(mapSession);
+  ).map((r) => mapSession(r as Parameters<typeof mapSession>[0]));
   return { courses, materials, sessions };
 }
 
 export const getStudies = createServerFn({ method: "GET" })
   .middleware([authMiddleware])
   .handler(async ({ context }) => loadStudies(context.userId));
-
-export const seedSampleSemester = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    const sql = await getSql();
-    const existing = await sql`select id from courses where user_id = ${context.userId} limit 1`;
-    if (existing[0]) return loadStudies(context.userId);
-    for (const c of SAMPLE_COURSES) {
-      const id = crypto.randomUUID();
-      await sql`insert into courses (id, user_id, session_label, semester, title, code)
-        values (${id}, ${context.userId}, ${"2026/2027 Academic Session"}, ${"Semester 1"}, ${c.title}, ${c.code})`;
-      await sql`insert into study_materials (id, user_id, course_id, title, kind)
-        values (${crypto.randomUUID()}, ${context.userId}, ${id}, ${`${c.title} — week 1 notes`}, ${"note"})`;
-    }
-    return loadStudies(context.userId);
-  });
 
 export const addCourse = createServerFn({ method: "POST" })
   .middleware([authMiddleware])

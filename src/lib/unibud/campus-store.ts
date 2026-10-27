@@ -2,9 +2,9 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { CampusRole } from "./roles";
 import type { IdentityTag } from "./identity-tags";
-import { SEED_SPILLS, type SpillPost, type SpillReply } from "./spill-data";
+import type { SpillPost, SpillReply } from "./spill-data";
 import type { ChatShare } from "@/lib/media/share";
-import { RightsManagement, SEED_ORIGINAL_AUDIO } from "@/lib/music/audio";
+import { RightsManagement, type AudioReport, type UnibudAudio } from "@/lib/music/audio";
 
 export type BudShortcut = "top" | "bottom" | "hidden";
 export type ProfileVisibility = "public" | "campus" | "connections";
@@ -107,6 +107,8 @@ type CampusState = {
   avatarDataUrl: string;
   legalName: string;
   postReplies: Record<string, SpillReply[]>;
+  dataHistoryDays: number;
+  autoCleanup: boolean;
   spills: SpillPost[];
   flaggedSpills: string[];
   followedRiffs: string[];
@@ -138,6 +140,7 @@ type CampusState = {
   clearSearches: () => void;
   removeSearch: (q: string) => void;
   addPost: (body: string, handle: string, media?: { image?: string; video?: string; id?: string; audioId?: string }) => void;
+  updateLocalPost: (id: string, body: string) => void;
   addStory: (s: LocalStory) => void;
   markAllRead: () => void;
   markRead: (id: string) => void;
@@ -193,90 +196,26 @@ type CampusState = {
   setPendingShare: (v?: ChatShare) => void;
   setSquareView: (v: "feed" | "peek") => void;
   setPrefs: (v: Partial<Prefs>) => void;
+  setDataHistoryDays: (v: number) => void;
+  setAutoCleanup: (v: boolean) => void;
   addFixerRating: (n: number) => void;
   patchBudAtlas: (v: Partial<BudAtlas>) => void;
 };
-
-const SEED_NOTES: HumanNote[] = [
-  {
-    id: "n1",
-    kind: "social",
-    title: "Your post just got some love from Tunde.",
-    body: "He reacted to the hostel note you shared with campus.",
-    href: "/",
-    read: false,
-    createdAt: new Date(Date.now() - 8 * 60_000).toISOString(),
-  },
-  {
-    id: "n2",
-    kind: "social",
-    title: "Adaeze Okonkwo accepted your connection request.",
-    body: "You can message her without waiting on a request.",
-    href: "/connect",
-    read: false,
-    createdAt: new Date(Date.now() - 24 * 60_000).toISOString(),
-  },
-  {
-    id: "n3",
-    kind: "communities",
-    title: "UNN Engineering has new replies in a discussion you follow.",
-    body: "Twelve people jumped in since you last looked.",
-    href: "/communities/unn-eng",
-    read: false,
-    createdAt: new Date(Date.now() - 60 * 60_000).toISOString(),
-  },
-  {
-    id: "n4",
-    kind: "events",
-    title: "Reminder: Faculty night is tonight.",
-    body: "Doors from 19:30. Tickets are in Marketplace — Events.",
-    href: "/market",
-    read: true,
-    createdAt: new Date(Date.now() - 4 * 60 * 60_000).toISOString(),
-  },
-  {
-    id: "n5",
-    kind: "class",
-    title: "CSC 301 is live on UniBoard.",
-    body: "Dr. Okoro started Recursion. Joining now can count as live attendance.",
-    href: "/board/csc301",
-    read: false,
-    createdAt: new Date(Date.now() - 5 * 60_000).toISOString(),
-  },
-  {
-    id: "n6",
-    kind: "live",
-    title: "Late join is still live.",
-    body: "You can rejoin CSC 301 while the session is open. Recording later will not flip absence.",
-    href: "/board/csc301",
-    read: false,
-    createdAt: new Date(Date.now() - 3 * 60_000).toISOString(),
-  },
-  {
-    id: "n7",
-    kind: "news",
-    title: "Exam timetable is out.",
-    body: "Dates sit on UniBoard and Educational News — not Square.",
-    href: "/news",
-    read: false,
-    createdAt: new Date(Date.now() - 90 * 60_000).toISOString(),
-  },
-];
 
 export const useCampusStore = create<CampusState>()(
   persist(
     (set) => ({
       liked: {},
-      likeCounts: { p1: 28, p2: 14, p3: 41, p5: 63, p8: 9, sp1: 22, sp3: 31, sp6: 18 },
-      following: ["amaka", "adaeze"],
-      followers: ["tunde", "kemi"],
-      connections: ["amaka", "tunde"],
-      incoming: ["chinedu", "kemi", "fatima"],
-      outgoing: ["ibrahim"],
-      recentSearches: ["architecture society", "faculty night", "Adaeze Okonkwo"],
+      likeCounts: {},
+      following: [],
+      followers: [],
+      connections: [],
+      incoming: [],
+      outgoing: [],
+      recentSearches: [],
       localPosts: [],
       myStories: [],
-      notes: SEED_NOTES,
+      notes: [],
       storiesSeen: [],
       showBud: true,
       budShortcut: "bottom",
@@ -303,10 +242,12 @@ export const useCampusStore = create<CampusState>()(
       avatarDataUrl: "",
       legalName: "",
       postReplies: {},
-      spills: SEED_SPILLS,
+      dataHistoryDays: 365,
+      autoCleanup: false,
+      spills: [],
       flaggedSpills: [],
       followedRiffs: [],
-      homeCampusId: "unilag",
+      homeCampusId: "",
       lifeStage: "student",
       hiddenPosts: [],
       savedPosts: [],
@@ -314,7 +255,7 @@ export const useCampusStore = create<CampusState>()(
       commentLikes: {},
       composeOpen: false,
       dropOpen: false,
-      originalAudios: SEED_ORIGINAL_AUDIO,
+      originalAudios: [],
       savedAudioIds: [],
       audioReports: [],
       squareView: "feed",
@@ -377,6 +318,8 @@ export const useCampusStore = create<CampusState>()(
             ...s.localPosts,
           ],
         })),
+      updateLocalPost: (id, body) =>
+        set((s) => ({ localPosts: s.localPosts.map((p) => (p.id === id ? { ...p, body } : p)) })),
       addStory: (story) =>
         set((s) => ({ myStories: [story, ...(s.myStories ?? [])].slice(0, 12) })),
       markAllRead: () => set((s) => ({ notes: s.notes.map((n) => ({ ...n, read: true })) })),
@@ -523,6 +466,8 @@ export const useCampusStore = create<CampusState>()(
       setPendingShare: (pendingShare) => set({ pendingShare }),
       setSquareView: (squareView) => set({ squareView }),
       setPrefs: (v) => set((s) => ({ prefs: { ...s.prefs, ...v } })),
+      setDataHistoryDays: (v) => set({ dataHistoryDays: Math.max(7, Math.min(3650, v)) }),
+      setAutoCleanup: (v) => set({ autoCleanup: v }),
       addFixerRating: (n) =>
         set((s) => ({
           fixerRatings: [...(s.fixerRatings ?? []), Math.min(5, Math.max(1, Math.round(n)))].slice(-40),
@@ -537,13 +482,31 @@ export const useCampusStore = create<CampusState>()(
           },
         })),
     }),
-    { name: "unibud-campus", merge: (persisted, current) => ({
-      ...current,
-      ...(persisted as object),
-      composeOpen: false,
-      dropOpen: false,
-      squareView: "feed" as const,
-    }) },
+    {
+      name: "unibud-campus",
+      version: 2,
+      migrate: (persisted) => ({
+        ...(persisted as object),
+        likeCounts: {},
+        following: [],
+        followers: [],
+        connections: [],
+        incoming: [],
+        outgoing: [],
+        recentSearches: [],
+        notes: [],
+        spills: [],
+        originalAudios: [],
+        homeCampusId: "",
+      }),
+      merge: (persisted, current) => ({
+        ...current,
+        ...(persisted as object),
+        composeOpen: false,
+        dropOpen: false,
+        squareView: "feed" as const,
+      }),
+    },
   ),
 );
 

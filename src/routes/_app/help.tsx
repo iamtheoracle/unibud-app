@@ -38,6 +38,7 @@ function Help() {
           </li>
         ))}
       </ul>
+      <div className="mt-6 rounded-2xl bg-card p-4 ring-1 ring-border"><p className="text-xs font-medium tracking-wide text-muted-foreground uppercase">Data help</p><div className="mt-3 flex flex-wrap gap-2"><Link to="/getting-started" className="rounded-full bg-secondary px-3 py-2 text-xs font-medium">Quick Start</Link><Link to="/dashboard" className="rounded-full bg-secondary px-3 py-2 text-xs font-medium">Dashboard</Link><Link to="/data-list" className="rounded-full bg-secondary px-3 py-2 text-xs font-medium">Data Management</Link><Link to="/data-preferences" className="rounded-full bg-secondary px-3 py-2 text-xs font-medium">Data Preferences</Link><Link to="/account-activity" className="rounded-full bg-secondary px-3 py-2 text-xs font-medium">Account Activity</Link></div></div>
       <p className="mt-6 text-sm">
         App problem?{" "}
         <Link to="/settings" className="font-medium text-bud">

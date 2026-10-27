@@ -20,10 +20,10 @@ async function loadWallet(userId: string) {
   const sql = await getSql();
   const tx = (
     await sql`select * from wallet_tx where user_id = ${userId} order by created_at desc limit 40`
-  ).map(mapTx);
+  ).map((r) => mapTx(r as Parameters<typeof mapTx>[0]));
   const requests = (
     await sql`select * from payment_requests where user_id = ${userId} order by created_at desc limit 40`
-  ).map(mapRequest);
+  ).map((r) => mapRequest(r as Parameters<typeof mapRequest>[0]));
   const funding = await sql<{
     program: string;
     status: string;
