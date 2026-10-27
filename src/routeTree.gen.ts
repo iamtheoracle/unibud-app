@@ -12,6 +12,11 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AppRouteImport } from './routes/_app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/_app/index'
+import { Route as AppAccountActivityRouteImport } from './routes/_app/account-activity'
+import { Route as AppDashboardRouteImport } from './routes/_app/dashboard'
+import { Route as AppDataListRouteImport } from './routes/_app/data-list'
+import { Route as AppDataPreferencesRouteImport } from './routes/_app/data-preferences'
+import { Route as AppGettingStartedRouteImport } from './routes/_app/getting-started'
 import { Route as AppBoardRouteImport } from './routes/_app/board'
 import { Route as AppBudRouteImport } from './routes/_app/bud'
 import { Route as AppCommunitiesRouteImport } from './routes/_app/communities'
@@ -68,6 +73,32 @@ const LoginRoute = LoginRouteImport.update({
 const AppIndexRoute = AppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+
+const AppAccountActivityRoute = AppAccountActivityRouteImport.update({
+  id: '/_app/account-activity',
+  path: '/account-activity',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDashboardRoute = AppDashboardRouteImport.update({
+  id: '/_app/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDataListRoute = AppDataListRouteImport.update({
+  id: '/_app/data-list',
+  path: '/data-list',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDataPreferencesRoute = AppDataPreferencesRouteImport.update({
+  id: '/_app/data-preferences',
+  path: '/data-preferences',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppGettingStartedRoute = AppGettingStartedRouteImport.update({
+  id: '/_app/getting-started',
+  path: '/getting-started',
   getParentRoute: () => AppRoute,
 } as any)
 const AppBoardRoute = AppBoardRouteImport.update({
@@ -288,6 +319,11 @@ const ApiMediaIdRoute = ApiMediaIdRouteImport.update({
 } as any)
 
 export interface FileRoutesByFullPath {
+  '/account-activity': typeof AppAccountActivityRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/data-list': typeof AppDataListRoute
+  '/data-preferences': typeof AppDataPreferencesRoute
+  '/getting-started': typeof AppGettingStartedRoute
   '/': typeof AppIndexRoute
   '/login': typeof LoginRoute
   '/board': typeof AppBoardRouteWithChildren
@@ -335,6 +371,11 @@ export interface FileRoutesByFullPath {
   '/market/': typeof AppMarketIndexRoute
 }
 export interface FileRoutesByTo {
+  '/account-activity': typeof AppAccountActivityRoute
+  '/dashboard': typeof AppDashboardRoute
+  '/data-list': typeof AppDataListRoute
+  '/data-preferences': typeof AppDataPreferencesRoute
+  '/getting-started': typeof AppGettingStartedRoute
   '/login': typeof LoginRoute
   '/board': typeof AppBoardRouteWithChildren
   '/bud': typeof AppBudRouteWithChildren
@@ -381,6 +422,11 @@ export interface FileRoutesByTo {
   '/market': typeof AppMarketIndexRoute
 }
 export interface FileRoutesById {
+  '/_app/account-activity': typeof AppAccountActivityRoute
+  '/_app/dashboard': typeof AppDashboardRoute
+  '/_app/data-list': typeof AppDataListRoute
+  '/_app/data-preferences': typeof AppDataPreferencesRoute
+  '/_app/getting-started': typeof AppGettingStartedRoute
   __root__: typeof rootRouteImport
   '/_app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
@@ -432,6 +478,11 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/account-activity'
+    | '/dashboard'
+    | '/data-list'
+    | '/data-preferences'
+    | '/getting-started'
     | '/'
     | '/login'
     | '/board'
@@ -479,6 +530,11 @@ export interface FileRouteTypes {
     | '/market/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/account-activity'
+    | '/dashboard'
+    | '/data-list'
+    | '/data-preferences'
+    | '/getting-started'
     | '/login'
     | '/board'
     | '/bud'
@@ -524,6 +580,11 @@ export interface FileRouteTypes {
     | '/api/media/$id'
     | '/market'
   id:
+    | '/_app/account-activity'
+    | '/_app/dashboard'
+    | '/_app/data-list'
+    | '/_app/data-preferences'
+    | '/_app/getting-started'
     | '__root__'
     | '/_app'
     | '/login'
@@ -601,6 +662,41 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/account-activity': {
+      id: '/_app/account-activity'
+      path: '/account-activity'
+      fullPath: '/account-activity'
+      preLoaderRoute: typeof AppAccountActivityRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/dashboard': {
+      id: '/_app/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AppDashboardRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/data-list': {
+      id: '/_app/data-list'
+      path: '/data-list'
+      fullPath: '/data-list'
+      preLoaderRoute: typeof AppDataListRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/data-preferences': {
+      id: '/_app/data-preferences'
+      path: '/data-preferences'
+      fullPath: '/data-preferences'
+      preLoaderRoute: typeof AppDataPreferencesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/getting-started': {
+      id: '/_app/getting-started'
+      path: '/getting-started'
+      fullPath: '/getting-started'
+      preLoaderRoute: typeof AppGettingStartedRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/board': {
@@ -998,6 +1094,11 @@ const AppSpillRouteWithChildren = AppSpillRoute._addFileChildren(
 )
 
 interface AppRouteChildren {
+  AppAccountActivityRoute: typeof AppAccountActivityRoute
+  AppDashboardRoute: typeof AppDashboardRoute
+  AppDataListRoute: typeof AppDataListRoute
+  AppDataPreferencesRoute: typeof AppDataPreferencesRoute
+  AppGettingStartedRoute: typeof AppGettingStartedRoute
   AppBoardRoute: typeof AppBoardRouteWithChildren
   AppBudRoute: typeof AppBudRouteWithChildren
   AppCommunitiesRoute: typeof AppCommunitiesRouteWithChildren
@@ -1032,6 +1133,11 @@ interface AppRouteChildren {
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppAccountActivityRoute: AppAccountActivityRoute,
+  AppDashboardRoute: AppDashboardRoute,
+  AppDataListRoute: AppDataListRoute,
+  AppDataPreferencesRoute: AppDataPreferencesRoute,
+  AppGettingStartedRoute: AppGettingStartedRoute,
   AppBoardRoute: AppBoardRouteWithChildren,
   AppBudRoute: AppBudRouteWithChildren,
   AppCommunitiesRoute: AppCommunitiesRouteWithChildren,
