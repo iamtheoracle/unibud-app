@@ -36,7 +36,7 @@ export function parseRss(xml: string, source: BrowsingRequest["source"]): Discov
     if (!sourceUrl || !title) continue;
     const published = tag(item, "pubDate");
     parsed.push({
-      id: \`gnews-\${Buffer.from(sourceUrl).toString("base64url").slice(0, 32)}-\${index}\`,
+      id: `gnews-${Buffer.from(sourceUrl).toString("base64url").slice(0, 32)}-${index}`,
       source,
       title,
       text: "",
@@ -64,7 +64,7 @@ export const rssDiscoveryProvider: BrowsingProvider = {
         headers: { Accept: "application/rss+xml, application/xml, text/xml", "User-Agent": "UNIBUD-SourceDiscovery/1.0" },
         signal: AbortSignal.timeout(12_000),
       });
-      if (!response.ok) return { ok: false, items: [], source: request.source, error: \`Discovery provider returned HTTP \${response.status}.\` };
+      if (!response.ok) return { ok: false, items: [], source: request.source, error: `Discovery provider returned HTTP ${response.status}.` };
       const contentType = response.headers.get("content-type") ?? "";
       if (!/xml|rss|text\//i.test(contentType)) return { ok: false, items: [], source: request.source, error: "Discovery provider returned an unexpected content type." };
       const xml = await response.text();
