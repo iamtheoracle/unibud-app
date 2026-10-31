@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { reviewEditorialCandidate, type EditorialCandidate } from "./editorial";
+import { reviewEditorialCandidate, type EditorialCandidate } from "./editorial.ts";
 
 const now = new Date("2026-10-31T12:00:00.000Z");
 const valid: EditorialCandidate = {
