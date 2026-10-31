@@ -1,18 +1,19 @@
 import type { AgentDefinition, AgentId } from "./contracts";
-import { emptyBrowsingResult, type BrowsingProvider } from "@/lib/world/browsing";
+import { rssDiscoveryProvider } from "@/lib/world/rss-discovery.server";
 import { reviewEditorialCandidate, type EditorialCandidate } from "@/lib/world/editorial";
 
-const browserProvider: BrowsingProvider = {
-  async discover(request) {
-    void request;
-    return emptyBrowsingResult("social");
-  },
-};
+const browserProvider = rssDiscoveryProvider;
 
 const definitions: AgentDefinition[] = [
   { id: "bud", role: "student companion", responsibility: "Own the student's visible conversation and expression.", contextScope: ["conversation", "student", "academic", "world"], memoryScope: ["conversation", "preferences", "learning"], permissions: ["respond"], collaborators: ["spark", "navigator", "scholar", "coach", "voice"] },
   { id: "spark", role: "coordinator", responsibility: "Coordinate only the specialists actually required for the request.", contextScope: ["request", "agent-state", "world-state"], memoryScope: ["task-state"], permissions: ["route", "coordinate"], collaborators: ["bud", "oracle", "scholar", "orbit", "coach", "community", "vision", "creator", "atlas", "pulse", "guardian", "voice", "navigator", "browser"] },
-  { id: "oracle", role: "research and verification", responsibility: "Verify external or current facts when verification is required.", contextScope: ["web", "sources", "verification"], memoryScope: ["source-history"], permissions: ["research", "verify"], collaborators: ["spark", "scholar", "browser"] },
+  { id: "oracle", role: "research and verification", responsibility: "Verify external or current facts when verification is required.", contextScope: ["web", "sources", "verification"], memoryScope: ["source-history"], permissions: ["research", "verify"], collaborators: ["spark", "scholar", "browser"], handler: async (input, context) => {
+    const query = typeof input.context?.query === "string" ? input.context.query : input.prompt;
+    const result = await browserProvider.discover({ requestId: context.requestId, source: "web", query, limit: typeof input.context?.limit === "number" ? input.context.limit : 15 });
+    return result.ok
+      ? { ok: true, summary: "Found " + result.items.length + " source lead(s). Each must be independently checked before editorial review.", data: { items: result.items, evidenceStatus: "discovery_leads_unverified" } }
+      : { ok: false, error: result.error };
+  } },
   { id: "scholar", role: "academic specialist", responsibility: "Work with course material, explanations, research, revision and academic reasoning.", contextScope: ["courses", "syllabus", "academic"], memoryScope: ["learning"], permissions: ["academic-read"], collaborators: ["spark", "oracle", "coach"] },
   { id: "orbit", role: "time and follow-up", responsibility: "Handle real reminders, schedules and follow-up state.", contextScope: ["tasks", "time", "notifications"], memoryScope: ["task-state"], permissions: ["schedule"], collaborators: ["spark", "coach"] },
   { id: "coach", role: "planning partner", responsibility: "Help structure study, planning and execution without taking over the student's work.", contextScope: ["planning", "learning"], memoryScope: ["goals", "progress"], permissions: ["plan"], collaborators: ["spark", "scholar", "orbit"] },
@@ -32,15 +33,15 @@ const definitions: AgentDefinition[] = [
   } },
   { id: "browser", role: "browsing and discovery specialist", responsibility: "Retrieve real, permitted external or connected content for the world when a browsing provider exists; never simulate discovery.", contextScope: ["web", "social", "discovery", "integrations"], memoryScope: ["source-history", "connected-sources"], permissions: ["browse", "discover"], collaborators: ["spark", "oracle", "community", "pulse"], handler: async (input, context) => {
     const requestedSource = input.context?.source;
-    const source = requestedSource === "web" || requestedSource === "campus" || requestedSource === "creator" ? requestedSource : "social";
+    const source = requestedSource === "campus" || requestedSource === "creator" ? requestedSource : "web";
     const result = await browserProvider.discover({
       requestId: context.requestId,
       source,
-      query: typeof input.context?.query === "string" ? input.context.query : undefined,
+      query: typeof input.context?.query === "string" ? input.context.query : input.prompt,
       limit: typeof input.context?.limit === "number" ? input.context.limit : undefined,
     });
     return result.ok
-      ? { ok: true, summary: `Retrieved ${result.items.length} real discovery item(s).`, data: { items: result.items } }
+      ? { ok: true, summary: "Retrieved " + result.items.length + " live discovery lead(s); claims remain unverified.", data: { items: result.items, evidenceStatus: "discovery_leads_unverified" } }
       : { ok: false, error: result.error };
   } },
 ];
