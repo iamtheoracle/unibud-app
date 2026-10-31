@@ -102,3 +102,36 @@ The app should feel alive because real systems are working. It must never manufa
 ## External verification note
 
 Generic TanStack Router guidance confirms that file-based dynamic routes use `src/routes/.../$id` patterns and that SSR can render route components on the server. Use the repository's actual generated route tree and runtime behavior as the authoritative implementation evidence, not generic examples.
+
+
+## Continuation update — 2026-10-31
+
+### Work committed after the original handoff
+
+- Added `src/lib/world/editorial.ts`: deterministic provenance, timestamp/freshness and image-rights metadata checks. These checks do not prove a claim true and never authorize publication.
+- Added `src/lib/world/editorial.test.ts` and included it in `npm test`.
+- Registered the internal `editorial` specialist and routed story/news/publishing/source-check prompts through Spark.
+- Changed independent specialist execution to `Promise.all`; specialist tasks no longer wait on one another unless a future dependency workflow explicitly requires sequencing.
+- Removed unsupported seeded Educational News cards. The News surface now displays an honest empty state until real, source-backed, human-approved notices exist.
+- Added `docs/EDITORIAL_TRUST_AND_MEDIA_STANDARD.md` covering source hierarchy, image rights, review, expiry, correction and publication controls.
+- Pinned GitHub Actions checkout/setup-node to immutable full commit SHAs.
+
+### Current verified blocker
+
+CI now starts successfully after action pinning, but `npm ci` fails because the committed lockfile is inconsistent with the dependency graph:
+- lock has root `ajv@6.15.0`, while npm resolves a required `ajv@8.20.0`
+- missing lock entries include `fast-uri@3.1.9`, `require-from-string@2.0.2`, and the corresponding newer `json-schema-traverse` tree
+- package.json direct dependency declarations match the lockfile root, so this is a transitive lockfile graph problem, not a missing top-level dependency.
+
+Do not regenerate by hand or disable `npm ci`. Regenerate with the repository's npm version in a controlled environment, review the lock diff, commit it, then rerun typecheck, lint, tests and production build.
+
+### Remaining editorial limitations
+
+- The browsing provider is still intentionally disconnected. Browser must report unavailable rather than return fake discoveries.
+- Editorial checks are deterministic metadata gates only; actual claim verification requires connected primary-source retrieval and human review.
+- Story publishing, image ingestion, rights records, editor approval storage, expiry/takedown propagation and source-backed content ingestion are not yet fully implemented.
+- Do not describe this editorial pipeline as production-complete.
+
+### Latest work checkpoint
+
+The latest implementation commit at the time of this update is recorded in git history. CI has not passed; the lockfile blocker above remains open.
