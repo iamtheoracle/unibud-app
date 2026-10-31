@@ -1,4 +1,3 @@
-import "server-only";
 import { normalizeDiscoveredContent, type BrowsingProvider, type BrowsingRequest, type DiscoveredContent } from "./browsing";
 
 const GOOGLE_NEWS_RSS = "https://news.google.com/rss/search";
