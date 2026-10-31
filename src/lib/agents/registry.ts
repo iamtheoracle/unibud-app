@@ -1,5 +1,6 @@
 import type { AgentDefinition, AgentId } from "./contracts";
 import { emptyBrowsingResult, type BrowsingProvider } from "@/lib/world/browsing";
+import { reviewEditorialCandidate, type EditorialCandidate } from "@/lib/world/editorial";
 
 const browserProvider: BrowsingProvider = {
   async discover(request) {
@@ -23,6 +24,12 @@ const definitions: AgentDefinition[] = [
   { id: "guardian", role: "safety specialist", responsibility: "Handle safety, abuse, scam and harmful-content concerns.", contextScope: ["safety"], memoryScope: ["safety-state"], permissions: ["safety-review"], collaborators: ["spark", "bud"] },
   { id: "voice", role: "voice specialist", responsibility: "Handle real speech recognition and synthesis when voice providers are connected.", contextScope: ["audio", "voice"], memoryScope: ["voice-preferences"], permissions: ["voice"], collaborators: ["spark", "creator"] },
   { id: "navigator", role: "UNIBUD navigator", responsibility: "Navigate students to real UNIBUD surfaces without duplicating them inside Bud.", contextScope: ["navigation", "routes"], memoryScope: ["navigation-preferences"], permissions: ["navigate"], collaborators: ["spark", "bud"] },
+  { id: "editorial", role: "editorial reviewer", responsibility: "Check source provenance, freshness and image-rights metadata; never approve or publish automatically.", contextScope: ["stories", "sources", "media-rights", "publication"], memoryScope: ["review-history"], permissions: ["editorial-review"], collaborators: ["spark", "oracle", "browser", "guardian", "vision"], handler: async (input) => {
+    const candidate = input.context?.candidate as EditorialCandidate | undefined;
+    if (!candidate || typeof candidate !== "object") return { ok: false, error: "A structured source candidate is required." };
+    const review = reviewEditorialCandidate(candidate);
+    return { ok: true, summary: review.status === "pending_editorial_review" ? "Basic provenance checks passed; human editorial approval is still required." : "Candidate failed one or more provenance or rights checks.", data: { review } };
+  } },
   { id: "browser", role: "browsing and discovery specialist", responsibility: "Retrieve real, permitted external or connected content for the world when a browsing provider exists; never simulate discovery.", contextScope: ["web", "social", "discovery", "integrations"], memoryScope: ["source-history", "connected-sources"], permissions: ["browse", "discover"], collaborators: ["spark", "oracle", "community", "pulse"], handler: async (input, context) => {
     const requestedSource = input.context?.source;
     const source = requestedSource === "web" || requestedSource === "campus" || requestedSource === "creator" ? requestedSource : "social";
