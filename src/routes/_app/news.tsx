@@ -51,7 +51,7 @@ function News() {
               {n.importance === "high" ? <span className="text-destructive">Important</span> : null}
             </div>
             <h2 className="mt-1 font-medium">{n.title}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">{n.body}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{n.summary}</p>
             <p className="mt-3 text-xs text-muted-foreground">
               {n.publisher} · {n.institution} · {n.audience} · {relativeTime(n.publishedAt)}
             </p>
