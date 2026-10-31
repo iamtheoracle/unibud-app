@@ -17,7 +17,7 @@ function News() {
       <p className="kicker">Academic information</p>
       <h1 className="mt-1 font-display text-4xl">Educational News</h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        Official-feeling campus and academic notices. This is not the Square feed.
+        Source-checked campus and academic updates. Every notice needs a real source and editorial approval.
       </p>
       <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
         {CATS.map((c) => (
@@ -34,6 +34,15 @@ function News() {
           </button>
         ))}
       </div>
+      {items.length === 0 ? (
+        <section className="mt-8 rounded-3xl border border-dashed border-border p-6">
+          <p className="text-base font-semibold">No verified updates yet</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            We will show a notice here only after its original source, date and details have been checked.
+            Unverified forwards and rumours stay out.
+          </p>
+        </section>
+      ) : null}
       <ul className="mt-5 space-y-3">
         {items.map((n) => (
           <li key={n.id} className="rounded-2xl bg-card p-4 ring-1 ring-border">
@@ -44,8 +53,11 @@ function News() {
             <h2 className="mt-1 font-medium">{n.title}</h2>
             <p className="mt-1 text-sm text-muted-foreground">{n.body}</p>
             <p className="mt-3 text-xs text-muted-foreground">
-              {n.source} · {n.institution} · {n.audience} · {relativeTime(n.date)}
+              {n.publisher} · {n.institution} · {n.audience} · {relativeTime(n.publishedAt)}
             </p>
+            <a className="mt-2 inline-block text-xs font-medium underline" href={n.sourceUrl} target="_blank" rel="noreferrer">
+              Open original source
+            </a>
           </li>
         ))}
       </ul>
