@@ -55,3 +55,10 @@ test("rejects images without creator, license and attribution", () => {
   assert.equal(result.checks.find((check) => check.code === "media_rights")?.passed, false);
   assert.equal(result.publishable, false);
 });
+
+test("malformed untrusted candidate data is rejected without throwing", () => {
+  const malformed = { title: null, summary: 12, publisher: {}, sourceUrl: "javascript:alert(1)" } as unknown as EditorialCandidate;
+  const result = reviewEditorialCandidate(malformed, now);
+  assert.equal(result.status, "rejected");
+  assert.equal(result.publishable, false);
+});
