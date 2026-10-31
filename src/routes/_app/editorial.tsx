@@ -19,6 +19,7 @@ export const Route = createFileRoute("/_app/editorial")({ component: EditorialWo
 function EditorialWorkspace() {
   const [query, setQuery] = useState("");
   const [note, setNote] = useState<Record<string, string>>({});
+  const [summaries, setSummaries] = useState<Record<string, string>>({});
   const [items, setItems] = useState<Candidate[]>([]);
   const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
@@ -58,7 +59,7 @@ function EditorialWorkspace() {
     }
     setBusy(true);
     try {
-      const result = await recordEditorialDecision({ data: { candidateId, action, note: reviewNote } });
+      const result = await recordEditorialDecision({ data: { candidateId, action, note: reviewNote, summary: summaries[candidateId] ?? "" } });
       setMessage("Decision recorded: " + result.status + ". Publishing remains a separate, disabled step.");
       await refresh();
     } catch (error) {
@@ -111,6 +112,9 @@ function EditorialWorkspace() {
               {item.summary ? <p className="mt-2 text-sm text-muted-foreground">{item.summary}</p> : null}
               <a href={item.source_url} target="_blank" rel="noreferrer" className="mt-3 inline-block break-all text-sm underline">Open original source</a>
               <p className="mt-2 text-xs text-muted-foreground">Verify the original article, publication date, key claims, relevance and any media licence before deciding.</p>
+              <label className="mt-3 block text-xs font-semibold">Editor-checked summary</label>
+              <textarea value={summaries[item.id] ?? item.summary ?? ""} onChange={(event) => setSummaries((old) => ({ ...old, [item.id]: event.target.value }))} placeholder="Write a factual summary based on the original publisher page…" rows={3} className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm" />
+              <label className="mt-3 block text-xs font-semibold">Decision note</label>
               <textarea value={note[item.id] ?? ""} onChange={(event) => setNote((old) => ({ ...old, [item.id]: event.target.value }))} placeholder="Evidence checked, corrections needed, or reason for rejection…" rows={3} className="mt-3 w-full rounded-xl border border-border bg-background p-3 text-sm" />
               <div className="mt-3 flex flex-wrap gap-2">
                 <button disabled={busy} onClick={() => void decide(item.id, "approved")} className="rounded-xl bg-ink px-3 py-2 text-sm font-semibold text-paper disabled:opacity-50">Approve for publication queue</button>
