@@ -47,9 +47,7 @@ export async function executeSpecialists(
   input: AgentInput,
   sink: ActivitySink,
 ): Promise<AgentExecution[]> {
-  const executions: AgentExecution[] = [];
-  for (const id of ids) {
-    executions.push(await executeAgent(getAgentDefinition(id), input, sink));
-  }
-  return executions;
+  // Specialist tasks are independent unless a future workflow declares dependencies.
+  // Run them concurrently so one slow provider does not block unrelated work.
+  return Promise.all(ids.map((id) => executeAgent(getAgentDefinition(id), input, sink)));
 }
