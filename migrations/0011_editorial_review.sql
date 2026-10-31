@@ -32,7 +32,7 @@ create table if not exists story_candidates (
 
 create index if not exists story_candidates_queue_idx
   on story_candidates (editorial_status, created_at desc);
-create index if not exists story_candidates_source_idx
+create unique index if not exists story_candidates_source_unique_idx
   on story_candidates (source_url);
 create index if not exists story_candidates_expiry_idx
   on story_candidates (freshness_expires_at);
