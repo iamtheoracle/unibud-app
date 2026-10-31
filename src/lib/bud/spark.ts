@@ -26,6 +26,7 @@ export function routeSpecialists(prompt: string): SpecialistId[] {
   if (/\b(web|search online|look up|find online|source|article|news)\b/.test(p)) extra.push("browser");
   if (/\b(my (instagram|tiktok|youtube)|my posts|my videos|my social|import my|bring my)\b/.test(p)) extra.push("browser");
   if (/\b(podcast|listen|audio|voice note|read (it|this) (out|aloud))\b/.test(p)) extra.push("voice");
+  if (/\b(story|news|article|publish|editorial|image rights|photo credit|source check)\b/.test(p)) extra.push("editorial");
   if (/\b(where in unibud|how do i find|take me to|which tab|open |go to |show my )\b/.test(p)) extra.push("navigator");
   const seen = new Set<SpecialistId>();
   return [...MODE_ROUTE[mode], ...extra].filter((id) => !seen.has(id) && seen.add(id));
@@ -40,5 +41,6 @@ export function sparkSystemNotes(prompt: string): string[] {
   if (specialists.includes("pulse")) notes.push("Use current verified activity only. No fabricated trends, events, or campus activity.");
   if (specialists.includes("browser")) notes.push("Use real connected browsing/discovery sources only. Never fabricate external posts, videos, trends, sources, or imports.");
   if (specialists.includes("atlas")) notes.push("Use retrieved continuity when available. Never invent memory.");
+  if (specialists.includes("editorial")) notes.push("Treat discovered stories as candidates only. Verify original sources, timestamps and media rights; require human approval before publication.");
   return notes;
 }
