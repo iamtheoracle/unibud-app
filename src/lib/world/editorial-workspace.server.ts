@@ -50,10 +50,13 @@ export const listEditorialQueue = createServerFn({ method: "GET" })
 
 export const recordEditorialDecision = createServerFn({ method: "POST" })
   .middleware([authMiddleware])
-  .validator((input: { candidateId: string; action: "approved" | "rejected" | "changes_requested" | "withdrawn"; note: string }) => input)
+  .validator((input: { candidateId: string; action: "approved" | "rejected" | "changes_requested" | "withdrawn"; note: string; title?: string; summary?: string; publisher?: string }) => input)
   .handler(async ({ context, data }) => {
     const sql = await requireEditor(context.userId);
     if (data.note.trim().length < 8) throw new Error("Add a review note explaining the decision.");
+    if (data.title !== undefined || data.summary !== undefined || data.publisher !== undefined) {
+      await sql`update story_candidates set title = ${data.title ?? ""}, summary = ${data.summary ?? ""}, publisher = ${data.publisher ?? "Publisher not confirmed"}, updated_at = now() where id = ${data.candidateId}`;
+    }
     const rows = await sql`select * from story_candidates where id = ${data.candidateId} limit 1`;
     const row = rows[0];
     if (!row) throw new Error("Story candidate not found.");
