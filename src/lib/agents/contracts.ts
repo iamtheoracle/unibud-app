@@ -15,7 +15,8 @@ export type AgentId =
   | "voice"
   | "navigator"
   | "spark"
-  | "browser";
+  | "browser"
+  | "editorial";
 
 export type AgentActivityState = "idle" | "queued" | "working" | "waiting" | "completed" | "failed";
 
