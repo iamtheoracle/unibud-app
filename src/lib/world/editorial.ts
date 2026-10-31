@@ -34,7 +34,12 @@ export type EditorialReview = {
   publishable: false;
 };
 
-function secureHttpUrl(value: string): boolean {
+function textValue(value: unknown): string {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function secureHttpUrl(value: unknown): boolean {
+  if (typeof value !== "string") return false;
   try {
     const url = new URL(value);
     return url.protocol === "https:" && Boolean(url.hostname) && !url.username && !url.password;
@@ -49,24 +54,28 @@ export function reviewEditorialCandidate(
   now = new Date(),
   maxAgeDays = 30,
 ): EditorialReview {
-  const published = Date.parse(candidate.publishedAt);
-  const retrieved = Date.parse(candidate.retrievedAt);
+  const publishedAt = textValue(candidate?.publishedAt);
+  const retrievedAt = textValue(candidate?.retrievedAt);
+  const published = Date.parse(publishedAt);
+  const retrieved = Date.parse(retrievedAt);
   const ageDays = (now.getTime() - published) / 86_400_000;
+  const media = candidate?.media;
+  const hasMedia = Boolean(media);
   const checks: EditorialCheck[] = [
-    { code: "title", passed: candidate.title.trim().length >= 8, detail: "A meaningful headline is required." },
-    { code: "summary", passed: candidate.summary.trim().length >= 30, detail: "A substantive summary is required; do not invent missing details." },
-    { code: "publisher", passed: candidate.publisher.trim().length >= 2, detail: "Identify the actual publisher or institution." },
-    { code: "source_url", passed: secureHttpUrl(candidate.sourceUrl), detail: "A direct HTTPS source link is required." },
+    { code: "title", passed: textValue(candidate?.title).length >= 8, detail: "A meaningful headline is required." },
+    { code: "summary", passed: textValue(candidate?.summary).length >= 30, detail: "A substantive summary is required; do not invent missing details." },
+    { code: "publisher", passed: textValue(candidate?.publisher).length >= 2, detail: "Identify the actual publisher or institution." },
+    { code: "source_url", passed: secureHttpUrl(candidate?.sourceUrl), detail: "A direct HTTPS source link is required." },
     { code: "dates", passed: Number.isFinite(published) && Number.isFinite(retrieved) && retrieved <= now.getTime() && published <= retrieved, detail: "Publication and retrieval timestamps must be valid and ordered." },
     { code: "freshness", passed: Number.isFinite(ageDays) && ageDays >= 0 && ageDays <= maxAgeDays, detail: `The source must be no older than ${maxAgeDays} days for this freshness policy.` },
     {
       code: "media_url",
-      passed: !candidate.media || secureHttpUrl(candidate.media.url) && secureHttpUrl(candidate.media.sourceUrl),
+      passed: !hasMedia || secureHttpUrl(media?.url) && secureHttpUrl(media?.sourceUrl),
       detail: "Images need a secure direct media URL and a source page.",
     },
     {
       code: "media_rights",
-      passed: !candidate.media || Boolean(candidate.media.creator.trim() && candidate.media.license.trim() && candidate.media.attribution.trim()),
+      passed: !hasMedia || Boolean(textValue(media?.creator) && textValue(media?.license) && textValue(media?.attribution)),
       detail: "Image creator, explicit license/permission, and attribution are required before reuse.",
     },
   ];
