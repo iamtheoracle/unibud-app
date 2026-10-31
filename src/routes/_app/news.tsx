@@ -3,6 +3,7 @@ import { useState } from "react";
 import { EDUCATIONAL_NEWS } from "@/lib/unibud/news-data";
 import { relativeTime } from "@/lib/unibud/format";
 import { cn } from "@/lib/utils";
+import { TRUSTED_NIGERIAN_EDUCATION_SOURCES } from "@/lib/world/source-registry";
 
 export const Route = createFileRoute("/_app/news")({ component: News });
 
@@ -41,6 +42,20 @@ function News() {
             We will show a notice here only after its original source, date and details have been checked.
             Unverified forwards and rumours stay out.
           </p>
+          <div className="mt-5 border-t border-border pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Official source directory</p>
+            <ul className="mt-3 space-y-3">
+              {TRUSTED_NIGERIAN_EDUCATION_SOURCES.slice(0, 6).map((source) => (
+                <li key={source.id} className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">{source.name}</p>
+                    <p className="text-xs text-muted-foreground">{source.scope.slice(0, 2).join(" · ")}</p>
+                  </div>
+                  <a className="shrink-0 text-xs font-medium underline" href={source.url} target="_blank" rel="noreferrer">Official site</a>
+                </li>
+              ))}
+            </ul>
+          </div>
         </section>
       ) : null}
       <ul className="mt-5 space-y-3">
