@@ -14,7 +14,7 @@ function decodeXml(value: string): string {
 }
 
 function tag(item: string, name: string): string {
-  const match = new RegExp("<" + name + "(?:\s[^>]*)?>([\s\S]*?)</" + name + ">", "i").exec(item);
+  const match = new RegExp("<" + name + "(?:\\s[^>]*)?>([\\s\\S]*?)</" + name + ">", "i").exec(item);
   return match ? decodeXml(match[1].trim()) : "";
 }
 
@@ -28,7 +28,7 @@ function safeLink(value: string): string | undefined {
 }
 
 export function parseRss(xml: string, source: BrowsingRequest["source"]): DiscoveredContent[] {
-  const items = xml.match(/<item(?:\s[^>]*)?>[\s\S]*?<\\/item>/gi) ?? [];
+  const items = xml.match(/<item(?:\s[^>]*)?>[\s\S]*?<\/item>/gi) ?? [];
   return items.map((item, index) => {
     const sourceUrl = safeLink(tag(item, "link"));
     const title = tag(item, "title");
@@ -70,7 +70,7 @@ export const rssDiscoveryProvider: BrowsingProvider = {
       });
       if (!response.ok) return { ok: false, items: [], source: request.source, error: `Discovery provider returned HTTP ${response.status}.` };
       const type = response.headers.get("content-type") ?? "";
-      if (!/xml|rss|text\\//i.test(type)) return { ok: false, items: [], source: request.source, error: "Discovery provider returned an unexpected content type." };
+      if (!/xml|rss|text\//i.test(type)) return { ok: false, items: [], source: request.source, error: "Discovery provider returned an unexpected content type." };
       const xml = await response.text();
       if (xml.length > 1_500_000) return { ok: false, items: [], source: request.source, error: "Discovery response exceeded the size limit." };
       const items = normalizeDiscoveredContent(request.source, parseRss(xml, request.source)).slice(0, limit);
