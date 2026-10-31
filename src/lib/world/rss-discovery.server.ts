@@ -27,7 +27,7 @@ function safeLink(value: string): string | undefined {
   }
 }
 
-function parseRss(xml: string, source: BrowsingRequest["source"]): DiscoveredContent[] {
+export function parseRss(xml: string, source: BrowsingRequest["source"]): DiscoveredContent[] {
   const items = xml.match(/<item(?:\\s[^>]*)?>[\\s\\S]*?<\\/item>/gi) ?? [];
   return items.map((item, index) => {
     const sourceUrl = safeLink(tag(item, "link"));
