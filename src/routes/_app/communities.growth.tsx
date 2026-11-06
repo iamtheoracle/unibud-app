@@ -10,7 +10,6 @@ import {
   MessageCircle,
   Pause,
   Play,
-  Search,
   Share2,
   Sparkles,
   Volume2,
@@ -103,7 +102,11 @@ function GrowthExperience() {
   useEffect(() => {
     if (!hydrated) return;
     const state: SavedState = { saved, completed, reflection };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    } catch {
+      /* Storage can be unavailable in restricted browser contexts. */
+    }
   }, [saved, completed, reflection, hydrated]);
 
   useEffect(() => () => {
@@ -212,9 +215,7 @@ function GrowthExperience() {
             <p className="text-[9px] font-semibold tracking-[0.22em] text-[#d9bd91]">QUAD · PERSONAL GROWTH</p>
             <h1 className="font-display text-2xl text-white">Your next chapter</h1>
           </div>
-          <button type="button" aria-label="Search lessons" onClick={() => toast.message("Lesson search is coming with the full library index.")} className="grid size-10 place-items-center rounded-full border border-white/10 text-white/80">
-            <Search className="size-4" />
-          </button>
+
         </div>
       </header>
 
