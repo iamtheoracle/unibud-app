@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppBoardRouteImport } from './routes/_app/board'
 import { Route as AppBudRouteImport } from './routes/_app/bud'
 import { Route as AppCommunitiesRouteImport } from './routes/_app/communities'
+import { Route as AppCommunitiesGrowthRouteImport } from './routes/_app/communities.growth'
 import { Route as AppConnectRouteImport } from './routes/_app/connect'
 import { Route as AppCreatorRouteImport } from './routes/_app/creator'
 import { Route as AppDiscoveryRouteImport } from './routes/_app/discovery'
@@ -84,6 +85,11 @@ const AppCommunitiesRoute = AppCommunitiesRouteImport.update({
   id: '/communities',
   path: '/communities',
   getParentRoute: () => AppRoute,
+} as any)
+const AppCommunitiesGrowthRoute = AppCommunitiesGrowthRouteImport.update({
+  id: '/growth',
+  path: '/growth',
+  getParentRoute: () => AppCommunitiesRoute,
 } as any)
 const AppConnectRoute = AppConnectRouteImport.update({
   id: '/connect',
@@ -322,6 +328,8 @@ export interface FileRoutesByFullPath {
   '/board/$id': typeof AppBoardIdRoute
   '/bud/communities': typeof AppBudCommunitiesRoute
   '/bud/fixer': typeof AppBudFixerRoute
+  '/communities/growth': typeof AppCommunitiesGrowthRoute
+  '/communities/growth': typeof AppCommunitiesGrowthRoute
   '/communities/$communityId': typeof AppCommunitiesCommunityIdRoute
   '/communities/$id': typeof AppCommunitiesIdRoute
   '/market/$id': typeof AppMarketIdRoute
@@ -935,11 +943,13 @@ const AppBudRouteWithChildren =
 interface AppCommunitiesRouteChildren {
   AppCommunitiesCommunityIdRoute: typeof AppCommunitiesCommunityIdRoute
   AppCommunitiesIdRoute: typeof AppCommunitiesIdRoute
+  AppCommunitiesGrowthRoute: typeof AppCommunitiesGrowthRoute
 }
 
 const AppCommunitiesRouteChildren: AppCommunitiesRouteChildren = {
   AppCommunitiesCommunityIdRoute: AppCommunitiesCommunityIdRoute,
   AppCommunitiesIdRoute: AppCommunitiesIdRoute,
+  AppCommunitiesGrowthRoute: AppCommunitiesGrowthRoute,
 }
 
 const AppCommunitiesRouteWithChildren = AppCommunitiesRoute._addFileChildren(

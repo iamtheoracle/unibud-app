@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { Plus, Search } from "lucide-react";
+import { ArrowRight, Plus, Search } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,6 +62,24 @@ function CommunitiesList() {
         Structured shared spaces. Class groups are academic cohorts. Study groups are student-run.
         Chat lives in Chat — a community is not a thread.
       </p>
+
+      <Link
+        to="/communities/growth"
+        className="mt-5 block overflow-hidden rounded-3xl border border-white/10 bg-[#101010] p-5 text-white"
+      >
+        <p className="text-[10px] font-semibold tracking-[0.2em] text-[#d9bd91] uppercase">Personal growth</p>
+        <div className="mt-2 flex items-end justify-between gap-3">
+          <div>
+            <h2 className="font-display text-2xl">Build the life you want to live.</h2>
+            <p className="mt-2 max-w-sm text-sm leading-relaxed text-white/60">
+              Stories, listening, daily practice and a way back when life gets busy.
+            </p>
+          </div>
+          <span className="grid size-11 shrink-0 place-items-center rounded-full bg-[#e8d4b5] text-[#111]">
+            <ArrowRight className="size-4" />
+          </span>
+        </div>
+      </Link>
       <div className="relative mt-5">
         <Search className="pointer-events-none absolute top-3.5 left-4 size-4 text-muted-foreground" />
         <Input
