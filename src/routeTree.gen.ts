@@ -15,6 +15,7 @@ import { Route as AppIndexRouteImport } from './routes/_app/index'
 import { Route as AppBoardRouteImport } from './routes/_app/board'
 import { Route as AppBudRouteImport } from './routes/_app/bud'
 import { Route as AppCommunitiesRouteImport } from './routes/_app/communities'
+import { Route as AppCommunitiesGrowthRouteImport } from './routes/_app/communities.growth'
 import { Route as AppConnectRouteImport } from './routes/_app/connect'
 import { Route as AppCreatorRouteImport } from './routes/_app/creator'
 import { Route as AppDiscoveryRouteImport } from './routes/_app/discovery'
@@ -84,6 +85,11 @@ const AppCommunitiesRoute = AppCommunitiesRouteImport.update({
   id: '/communities',
   path: '/communities',
   getParentRoute: () => AppRoute,
+} as any)
+const AppCommunitiesGrowthRoute = AppCommunitiesGrowthRouteImport.update({
+  id: '/growth',
+  path: '/growth',
+  getParentRoute: () => AppCommunitiesRoute,
 } as any)
 const AppConnectRoute = AppConnectRouteImport.update({
   id: '/connect',
@@ -293,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/board': typeof AppBoardRouteWithChildren
   '/bud': typeof AppBudRouteWithChildren
   '/communities': typeof AppCommunitiesRouteWithChildren
+  '/communities/growth': typeof AppCommunitiesGrowthRoute
   '/connect': typeof AppConnectRoute
   '/creator': typeof AppCreatorRoute
   '/discovery': typeof AppDiscoveryRoute
@@ -322,6 +329,7 @@ export interface FileRoutesByFullPath {
   '/board/$id': typeof AppBoardIdRoute
   '/bud/communities': typeof AppBudCommunitiesRoute
   '/bud/fixer': typeof AppBudFixerRoute
+  '/communities/growth': typeof AppCommunitiesGrowthRoute
   '/communities/$communityId': typeof AppCommunitiesCommunityIdRoute
   '/communities/$id': typeof AppCommunitiesIdRoute
   '/market/$id': typeof AppMarketIdRoute
@@ -339,6 +347,7 @@ export interface FileRoutesByTo {
   '/board': typeof AppBoardRouteWithChildren
   '/bud': typeof AppBudRouteWithChildren
   '/communities': typeof AppCommunitiesRouteWithChildren
+  '/communities/growth': typeof AppCommunitiesGrowthRoute
   '/connect': typeof AppConnectRoute
   '/creator': typeof AppCreatorRoute
   '/discovery': typeof AppDiscoveryRoute
@@ -387,6 +396,7 @@ export interface FileRoutesById {
   '/_app/board': typeof AppBoardRouteWithChildren
   '/_app/bud': typeof AppBudRouteWithChildren
   '/_app/communities': typeof AppCommunitiesRouteWithChildren
+  '/_app/communities/growth': typeof AppCommunitiesGrowthRoute
   '/_app/connect': typeof AppConnectRoute
   '/_app/creator': typeof AppCreatorRoute
   '/_app/discovery': typeof AppDiscoveryRoute
@@ -419,70 +429,12 @@ export interface FileRoutesById {
   '/_app/bud/fixer': typeof AppBudFixerRoute
   '/_app/communities/$communityId': typeof AppCommunitiesCommunityIdRoute
   '/_app/communities/$id': typeof AppCommunitiesIdRoute
-  '/_app/market/$id': typeof AppMarketIdRoute
-  '/_app/market/$listingId': typeof AppMarketListingIdRoute
-  '/_app/messages/$id': typeof AppMessagesIdRoute
-  '/_app/riff/$id': typeof AppRiffIdRoute
-  '/_app/spill/$id': typeof AppSpillIdRoute
-  '/_app/u/$handle': typeof AppUHandleRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/media/$id': typeof ApiMediaIdRoute
-  '/_app/market/': typeof AppMarketIndexRoute
-}
-export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
+  '/_app/market/$id': ty  to:
     | '/login'
     | '/board'
     | '/bud'
     | '/communities'
-    | '/connect'
-    | '/creator'
-    | '/discovery'
-    | '/feedback'
-    | '/fixer'
-    | '/help'
-    | '/live'
-    | '/market'
-    | '/messages'
-    | '/money'
-    | '/news'
-    | '/notifications'
-    | '/podcasts'
-    | '/profile'
-    | '/riff'
-    | '/saved'
-    | '/search'
-    | '/sell'
-    | '/settings'
-    | '/social'
-    | '/spill'
-    | '/studies'
-    | '/tutor'
-    | '/watch'
-    | '/welcome'
-    | '/audio/$id'
-    | '/board/$id'
-    | '/bud/communities'
-    | '/bud/fixer'
-    | '/communities/$communityId'
-    | '/communities/$id'
-    | '/market/$id'
-    | '/market/$listingId'
-    | '/messages/$id'
-    | '/riff/$id'
-    | '/spill/$id'
-    | '/u/$handle'
-    | '/api/auth/$'
-    | '/api/media/$id'
-    | '/market/'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/login'
-    | '/board'
-    | '/bud'
-    | '/communities'
+    | '/communities/growth'
     | '/connect'
     | '/creator'
     | '/discovery'
@@ -530,6 +482,7 @@ export interface FileRouteTypes {
     | '/_app/board'
     | '/_app/bud'
     | '/_app/communities'
+    | '/_app/communities/growth'
     | '/_app/connect'
     | '/_app/creator'
     | '/_app/discovery'
@@ -935,11 +888,13 @@ const AppBudRouteWithChildren =
 interface AppCommunitiesRouteChildren {
   AppCommunitiesCommunityIdRoute: typeof AppCommunitiesCommunityIdRoute
   AppCommunitiesIdRoute: typeof AppCommunitiesIdRoute
+  AppCommunitiesGrowthRoute: typeof AppCommunitiesGrowthRoute
 }
 
 const AppCommunitiesRouteChildren: AppCommunitiesRouteChildren = {
   AppCommunitiesCommunityIdRoute: AppCommunitiesCommunityIdRoute,
   AppCommunitiesIdRoute: AppCommunitiesIdRoute,
+  AppCommunitiesGrowthRoute: AppCommunitiesGrowthRoute,
 }
 
 const AppCommunitiesRouteWithChildren = AppCommunitiesRoute._addFileChildren(
