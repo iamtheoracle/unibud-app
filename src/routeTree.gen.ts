@@ -347,6 +347,7 @@ export interface FileRoutesByTo {
   '/board': typeof AppBoardRouteWithChildren
   '/bud': typeof AppBudRouteWithChildren
   '/communities': typeof AppCommunitiesRouteWithChildren
+  '/communities/growth': typeof AppCommunitiesGrowthRoute
   '/connect': typeof AppConnectRoute
   '/creator': typeof AppCreatorRoute
   '/discovery': typeof AppDiscoveryRoute
@@ -428,71 +429,12 @@ export interface FileRoutesById {
   '/_app/bud/fixer': typeof AppBudFixerRoute
   '/_app/communities/$communityId': typeof AppCommunitiesCommunityIdRoute
   '/_app/communities/$id': typeof AppCommunitiesIdRoute
-  '/_app/market/$id': typeof AppMarketIdRoute
-  '/_app/market/$listingId': typeof AppMarketListingIdRoute
-  '/_app/messages/$id': typeof AppMessagesIdRoute
-  '/_app/riff/$id': typeof AppRiffIdRoute
-  '/_app/spill/$id': typeof AppSpillIdRoute
-  '/_app/u/$handle': typeof AppUHandleRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
-  '/api/media/$id': typeof ApiMediaIdRoute
-  '/_app/market/': typeof AppMarketIndexRoute
-}
-export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
+  '/_app/market/$id': ty  to:
     | '/login'
     | '/board'
     | '/bud'
     | '/communities'
     | '/communities/growth'
-    | '/connect'
-    | '/creator'
-    | '/discovery'
-    | '/feedback'
-    | '/fixer'
-    | '/help'
-    | '/live'
-    | '/market'
-    | '/messages'
-    | '/money'
-    | '/news'
-    | '/notifications'
-    | '/podcasts'
-    | '/profile'
-    | '/riff'
-    | '/saved'
-    | '/search'
-    | '/sell'
-    | '/settings'
-    | '/social'
-    | '/spill'
-    | '/studies'
-    | '/tutor'
-    | '/watch'
-    | '/welcome'
-    | '/audio/$id'
-    | '/board/$id'
-    | '/bud/communities'
-    | '/bud/fixer'
-    | '/communities/$communityId'
-    | '/communities/$id'
-    | '/market/$id'
-    | '/market/$listingId'
-    | '/messages/$id'
-    | '/riff/$id'
-    | '/spill/$id'
-    | '/u/$handle'
-    | '/api/auth/$'
-    | '/api/media/$id'
-    | '/market/'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/login'
-    | '/board'
-    | '/bud'
-    | '/communities'
     | '/connect'
     | '/creator'
     | '/discovery'
