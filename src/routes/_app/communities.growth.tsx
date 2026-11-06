@@ -302,6 +302,21 @@ function GrowthExperience() {
       </section>
 
       <section className="px-5 pt-7">
+        <div className="rounded-3xl border border-white/10 bg-[#111] p-5">
+          <p className="text-[10px] font-semibold tracking-[0.2em] text-[#d9bd91] uppercase">A moment to reflect</p>
+          <h2 className="mt-2 font-display text-2xl text-white">What will you take into tomorrow?</h2>
+          <textarea
+            value={reflection}
+            onChange={(event) => setReflection(event.target.value)}
+            placeholder="Write a thought, a lesson, or something you want to remember…"
+            rows={3}
+            className="mt-4 w-full resize-y rounded-2xl border border-white/10 bg-black/30 p-3 text-sm leading-relaxed text-white outline-none placeholder:text-white/30 focus:border-[#d9bd91]/50"
+          />
+          <p className="mt-2 text-[10px] text-white/35">Private reflection · saved on this device</p>
+        </div>
+      </section>
+
+      <section className="px-5 pt-7">
         <div className="flex items-end justify-between">
           <div>
             <p className="text-[10px] font-semibold tracking-[0.2em] text-white/45 uppercase">Keep exploring</p>
