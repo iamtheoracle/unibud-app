@@ -315,3 +315,29 @@
 .cam-modes button[data-on="true"] {
   color: var(--color-paper);
 }
+
+
+/* Reference-led shell refinement: editorial restraint, not a new navigation model. */
+.unibud-shell-header {
+  border-bottom: 1px solid rgb(17 17 20 / 6%);
+  box-shadow: 0 8px 24px rgb(17 17 20 / 3%);
+}
+
+.unibud-primary-nav {
+  padding-inline: 0.75rem;
+}
+
+.unibud-shell-content {
+  width: 100%;
+  min-width: 0;
+}
+
+@media (min-width: 48rem) {
+  .unibud-shell-content {
+    padding-inline: 1rem;
+  }
+
+  .unibud-shell-header > div {
+    padding-inline: 1rem;
+  }
+}
