@@ -52,7 +52,7 @@ export function AppShell() {
       {hideTabs ? null : (
         <header
           className={cn(
-            "fixed inset-x-0 top-0 z-30 bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur-sm transition-transform duration-200",
+            "unibud-shell-header fixed inset-x-0 top-0 z-30 bg-background/95 pt-[env(safe-area-inset-top)] backdrop-blur-sm transition-transform duration-200",
             hidden ? "-translate-y-full" : "translate-y-0",
           )}
         >
@@ -85,14 +85,14 @@ export function AppShell() {
             </div>
           </div>
           {hideTabs || squareView === "peek" ? null : (
-            <PrimaryNav className="mx-auto mt-2 max-w-3xl" />
+            <PrimaryNav className="unibud-primary-nav mx-auto mt-2 max-w-3xl" />
           )}
         </header>
       )}
 
       <div
         className={cn(
-          "mx-auto min-h-dvh max-w-3xl",
+          "unibud-shell-content mx-auto min-h-dvh max-w-3xl",
           hideTabs || squareView === "peek"
             ? ""
             : showPrimary
